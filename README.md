@@ -8,6 +8,23 @@ Hover the notch to see every Claude Code and Claude desktop session at a glance.
 - Runs entirely on your Mac. No network access, no account, nothing is sent anywhere.
 - One small native app (Swift / SwiftUI). No dependencies.
 
+
+<p align="center">
+  <img src="docs/images/session-list.png" width="640" alt="Hovering the notch shows every Claude session with its state, cache countdown and context usage">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/approvals.png" alt="Allow or Deny permission prompts from the notch, with a risk flag on dangerous commands"><br><sub><b>Approvals.</b> Answer permission prompts without switching windows. Risky commands are flagged.</sub></td>
+    <td width="50%"><img src="docs/images/alert.png" alt="The notch drops down when a session needs you"><br><sub><b>Alerts.</b> The notch drops down, with a sound, when a session needs you, finishes, or is about to lose its prompt cache.</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/images/collapsed.png" alt="Resting state: a sparkle and activity dots on the left, a count on the right"><br><sub><b>Resting.</b> A sparkle with activity dots while something works, and on the right the most important number.</sub></td>
+  </tr>
+</table>
+
+<sub>Screenshots are rendered from made-up demo data by <code>ClaudeNotch render-screenshots docs/images</code>.</sub>
+
 ## What you get
 
 | | |
@@ -197,6 +214,7 @@ scripts/                install.sh, uninstall.sh
 make test          # swift test
 make run           # run from the build folder
 make status        # same as `ClaudeNotch status`
+make screenshots   # re-render the images in docs/images (offscreen, from demo data)
 ```
 
 Design notes that are easy to forget:

@@ -20,6 +20,12 @@ public final class PermissionBroker: ObservableObject {
         self.paths = paths
     }
 
+    /// A broker frozen on the given requests, never touching the disk (for documentation screenshots).
+    public init(fixedPending: [PermissionRequest]) {
+        self.paths = .live
+        self.pending = fixedPending
+    }
+
     public func start() {
         stop()
         let fm = FileManager.default

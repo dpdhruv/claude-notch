@@ -29,23 +29,30 @@ final class NotchModel: ObservableObject {
     private var knownRequestIDs = Set<String>()
 
     /// - Parameter isFullScreenAppActive: asked once a second whether a full-screen app is in front.
-    init(geometry: NotchGeometry, paths: Paths = .live, preferences: UserDefaults = .standard,
-         isFullScreenAppActive: @escaping () -> Bool = { false }) {
+    init(geometry: NotchGeometry, monitor: SessionMonitor, broker: PermissionBroker, linker: SessionLinker,
+         preferences: UserDefaults = .standard, isFullScreenAppActive: @escaping () -> Bool = { false }) {
         self.geometry = geometry
+        self.monitor = monitor
+        self.broker = broker
+        self.linker = linker
         self.preferences = preferences
         self.isFullScreenAppActive = isFullScreenAppActive
         self.policy = QuietPolicy(quietInFullScreen: preferences.object(forKey: Self.quietInFullScreenKey) as? Bool ?? true)
-        self.monitor = SessionMonitor(paths: paths)
-        self.broker = PermissionBroker(paths: paths)
-        self.linker = SessionLinker(paths: paths)
+    }
 
+    /// The real thing, reading this Mac's Claude data.
+    convenience init(geometry: NotchGeometry, paths: Paths = .live, isFullScreenAppActive: @escaping () -> Bool = { false }) {
+        self.init(geometry: geometry, monitor: SessionMonitor(paths: paths), broker: PermissionBroker(paths: paths),
+                  linker: SessionLinker(paths: paths), isFullScreenAppActive: isFullScreenAppActive)
+    }
+
+    /// Wires the data sources to the notch and starts them.
+    func start() {
         // dropFirst: the initial empty value is not a scan result, and must not become the alert baseline.
         monitor.$sessions.dropFirst().sink { [weak self] in self?.sessionsChanged($0) }.store(in: &cancellables)
         monitor.$now.sink { [weak self] in self?.clockTicked($0) }.store(in: &cancellables)
         broker.$pending.receive(on: DispatchQueue.main).sink { [weak self] in self?.requestsChanged($0) }.store(in: &cancellables)
-    }
 
-    func start() {
         broker.start()
         monitor.start()
     }
@@ -233,6 +240,13 @@ final class NotchModel: ObservableObject {
             guard let self, !self.isHovering else { return }
             self.collapse()
         }
+    }
+
+    /// Freezes the model in one state, for rendering documentation screenshots. Never call `start()` afterwards.
+    func freeze(mode: NotchMode, alert: NotchAlert? = nil, pointer: CGPoint? = nil) {
+        self.mode = mode
+        self.alert = alert
+        self.pointer = pointer
     }
 
     /// For screenshots and debugging: start with the list open. See `CLAUDE_NOTCH_EXPANDED` in the README.

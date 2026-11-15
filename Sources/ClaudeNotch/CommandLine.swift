@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import NotchCore
 
@@ -12,6 +13,7 @@ enum CommandLineTool {
       install-hooks     add the notch's hooks to Claude Code's settings.json
       uninstall-hooks   remove them again (everything else in settings.json is left alone)
       status            show what is installed and what the app can see
+      render-screenshots <folder>   write the README screenshots from demo data (no screen capture)
       --version, --help
 
     Environment:
@@ -27,6 +29,7 @@ enum CommandLineTool {
         case "install-hooks": return installHooks()
         case "uninstall-hooks": return uninstallHooks()
         case "status": return status()
+        case "render-screenshots": return renderScreenshots(into: arguments.dropFirst().first ?? "docs/images")
         case "--version", "-v": print("ClaudeNotch \(Config.version)"); return 0
         case "--help", "-h", "help": print(usage); return 0
         default:
@@ -55,6 +58,17 @@ enum CommandLineTool {
             return 0
         } catch {
             FileHandle.standardError.write(Data("Could not remove hooks: \(error.localizedDescription)\n".utf8))
+            return 1
+        }
+    }
+
+    private static func renderScreenshots(into folder: String) -> Int32 {
+        _ = NSApplication.shared   // AppKit must be initialised before SwiftUI can render
+        do {
+            try MainActor.assumeIsolated { try ScreenshotRenderer.render(to: URL(fileURLWithPath: folder)) }
+            return 0
+        } catch {
+            FileHandle.standardError.write(Data("Could not render screenshots: \(error)\n".utf8))
             return 1
         }
     }

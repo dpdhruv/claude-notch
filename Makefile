@@ -1,4 +1,4 @@
-.PHONY: build test install uninstall run status clean
+.PHONY: build test install uninstall run status screenshots clean
 
 build:            ## Compile in release mode
 	swift build -c release
@@ -17,6 +17,9 @@ run:              ## Run from the build folder without installing
 
 status:           ## What is installed, and what the app can see
 	swift run -c release ClaudeNotch status
+
+screenshots:      ## Re-render the README screenshots from demo data
+	swift run -c release ClaudeNotch render-screenshots docs/images
 
 clean:
 	swift package clean

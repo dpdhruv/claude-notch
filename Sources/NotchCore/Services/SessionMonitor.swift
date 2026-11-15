@@ -18,6 +18,13 @@ public final class SessionMonitor: ObservableObject {
         self.paths = paths
     }
 
+    /// A monitor frozen on the given sessions, never touching the disk (for documentation screenshots).
+    public init(fixedSessions: [ClaudeSession], now: Date) {
+        self.paths = .live
+        self.sessions = fixedSessions
+        self.now = now
+    }
+
     public func start() {
         stop()
         refresh()
