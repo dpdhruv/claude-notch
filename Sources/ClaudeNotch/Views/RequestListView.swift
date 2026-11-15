@@ -149,6 +149,19 @@ struct RequestRow: View {
         .help("Time left before this goes back to Claude's own prompt")
     }
 
+    /// The button's word, with its keyboard shortcut beside it on the card those keys answer.
+    private func buttonLabel(_ title: String, shortcut: String, weight: Font.Weight, tint: Color) -> some View {
+        HStack(spacing: 5) {
+            Text(title).font(.system(size: 11, weight: weight))
+            if showsShortcutHint {
+                Text(shortcut).font(.system(size: 9.5, weight: .medium, design: .monospaced)).opacity(0.6)
+            }
+        }
+        .foregroundStyle(tint)
+        .padding(.horizontal, 13)
+        .frame(minWidth: 62)
+    }
+
     private var actions: some View {
         HStack(spacing: 8) {
             Button { model.answer(request, .deferToApp) } label: {
@@ -156,26 +169,16 @@ struct RequestRow: View {
             }
             .buttonStyle(.plain)
             Spacer(minLength: 0)
-            if showsShortcutHint {
-                Text("⌥⌘N  ⌥⌘Y")
-                    .font(.system(size: 9.5, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.3))
-                    .help("Keyboard: ⌥⌘N denies, ⌥⌘Y allows")
-            }
             Button { model.answer(request, .deny) } label: {
-                Text("Deny")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Palette.coral)
-                    .frame(width: 62, height: 24)
+                buttonLabel("Deny", shortcut: "⌥⌘N", weight: .semibold, tint: Palette.coral)
+                    .frame(height: 24)
                     .background(Capsule().fill(Palette.coral.opacity(hoveringDeny ? 0.3 : 0.16)))
             }
             .buttonStyle(.plain)
             .onHover { hoveringDeny = $0 }
             Button { model.answer(request, .allow) } label: {
-                Text("Allow")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.black)
-                    .frame(width: 62, height: 24)
+                buttonLabel("Allow", shortcut: "⌥⌘Y", weight: .bold, tint: .black)
+                    .frame(height: 24)
                     .background(Capsule().fill(Palette.mint.opacity(hoveringAllow ? 1 : 0.88)))
             }
             .buttonStyle(.plain)
