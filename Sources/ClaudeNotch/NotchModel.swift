@@ -27,6 +27,9 @@ final class NotchModel: ObservableObject {
     @Published private(set) var policy: QuietPolicy
     private let preferences: UserDefaults
     private let isFullScreenAppActive: () -> Bool
+    private let frontmostBundleID: () -> String?
+    /// An approval arrived and its sound has not played yet (it plays when the card finally drops down).
+    private var approvalSoundPending = false
 
     private let linker: SessionLinker
     private let alerts = AlertEngine()
@@ -37,7 +40,8 @@ final class NotchModel: ObservableObject {
 
     /// - Parameter isFullScreenAppActive: asked once a second whether a full-screen app is in front.
     init(geometry: NotchGeometry, monitor: SessionMonitor, broker: PermissionBroker, linker: SessionLinker,
-         serverMonitor: ServerMonitor = ServerMonitor(fixed: []), preferences: UserDefaults = .standard, isFullScreenAppActive: @escaping () -> Bool = { false }) {
+         serverMonitor: ServerMonitor = ServerMonitor(fixed: []), preferences: UserDefaults = .standard, isFullScreenAppActive: @escaping () -> Bool = { false },
+         frontmostBundleID: @escaping () -> String? = { nil }) {
         self.geometry = geometry
         self.monitor = monitor
         self.broker = broker
@@ -46,13 +50,17 @@ final class NotchModel: ObservableObject {
         self.linker = linker
         self.preferences = preferences
         self.isFullScreenAppActive = isFullScreenAppActive
-        self.policy = QuietPolicy(quietInFullScreen: preferences.object(forKey: Self.quietInFullScreenKey) as? Bool ?? true)
+        self.frontmostBundleID = frontmostBundleID
+        self.policy = QuietPolicy(quietInFullScreen: preferences.object(forKey: Self.quietInFullScreenKey) as? Bool ?? true,
+                                  quietWhenClaudeInFront: preferences.object(forKey: Self.quietWhenClaudeInFrontKey) as? Bool ?? true)
     }
 
     /// The real thing, reading this Mac's Claude data.
-    convenience init(geometry: NotchGeometry, paths: Paths = .live, isFullScreenAppActive: @escaping () -> Bool = { false }) {
+    convenience init(geometry: NotchGeometry, paths: Paths = .live, isFullScreenAppActive: @escaping () -> Bool = { false },
+                     frontmostBundleID: @escaping () -> String? = { nil }) {
         self.init(geometry: geometry, monitor: SessionMonitor(paths: paths), broker: PermissionBroker(paths: paths),
-                  linker: SessionLinker(paths: paths), serverMonitor: ServerMonitor(paths: paths), isFullScreenAppActive: isFullScreenAppActive)
+                  linker: SessionLinker(paths: paths), serverMonitor: ServerMonitor(paths: paths), isFullScreenAppActive: isFullScreenAppActive,
+                  frontmostBundleID: frontmostBundleID)
     }
 
     /// Wires the data sources to the notch and starts them.
@@ -76,6 +84,16 @@ final class NotchModel: ObservableObject {
     }
 
     private static let quietInFullScreenKey = "quietInFullScreen"
+    private static let quietWhenClaudeInFrontKey = "quietWhenClaudeInFront"
+
+    /// Claude (or a terminal) is in front, so approvals wait quietly instead of dropping down.
+    private var holdingApprovals: Bool { policy.holdsApprovals(frontmostBundleID: frontmostBundleID()) }
+
+    func setQuietWhenClaudeInFront(_ enabled: Bool) {
+        policy.quietWhenClaudeInFront = enabled
+        preferences.set(enabled, forKey: Self.quietWhenClaudeInFrontKey)
+        revealApprovalsIfAllowed()
+    }
 
     // MARK: Quiet mode
 
@@ -110,8 +128,8 @@ final class NotchModel: ObservableObject {
             if mode != .collapsed { mode = .collapsed }
         } else if wasNormal == false, !requests.isEmpty {
             // Back to normal with approvals still waiting: show them now.
-            NSSound(named: "Sosumi")?.play()
-            withAnimation(Motion.alert) { mode = .request }
+            approvalSoundPending = true
+            revealApprovalsIfAllowed()
         }
     }
 
@@ -149,16 +167,18 @@ final class NotchModel: ObservableObject {
 
     func pointerEntered() {
         isHovering = true
-        guard presence != .hidden, requests.isEmpty else { return }
+        guard presence != .hidden else { return }
         pendingCollapse?.cancel()
         alertTimer?.invalidate()
-        withAnimation(Motion.reveal) { mode = .expanded }
+        // With approvals waiting, hovering shows them (they may have been held back quietly) instead of the list.
+        let target: NotchMode = requests.isEmpty ? .expanded : .request
+        if mode != target { withAnimation(Motion.reveal) { mode = target } }
     }
 
     func pointerExited() {
         isHovering = false
         pointer = nil
-        guard requests.isEmpty else { return }
+        guard requests.isEmpty || holdingApprovals else { return }
         pendingCollapse?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self, !self.isHovering else { return }
@@ -169,7 +189,7 @@ final class NotchModel: ObservableObject {
     }
 
     private func collapse() {
-        guard requests.isEmpty else { return }
+        guard requests.isEmpty || holdingApprovals else { return }
         serverMenuSessionID = nil
         withAnimation(Motion.settle) { mode = .collapsed }
     }
@@ -232,6 +252,7 @@ final class NotchModel: ObservableObject {
 
     private func clockTicked(_ now: Date) {
         refreshPresence()
+        revealApprovalsIfAllowed()
         alerts.alerts(forCachesIn: monitor.sessions, now: now).forEach { present($0) }
     }
 
@@ -251,14 +272,24 @@ final class NotchModel: ObservableObject {
         objectWillChange.send()   // `requests` is derived from the broker, which this model does not publish itself
 
         guard !requests.isEmpty else {
+            approvalSoundPending = false
             if mode == .request { withAnimation(Motion.settle) { mode = isHovering ? .expanded : .collapsed } }
             return
         }
-        // While quiet the cards wait (they hand back to Claude's own dialog on their own) and appear when quiet ends.
-        guard presence == .normal else { return }
-        if hasNew { NSSound(named: "Sosumi")?.play() }
+        if hasNew { approvalSoundPending = true }
+        revealApprovalsIfAllowed()
+    }
+
+    /// Drops the approval cards down, unless the notch is quiet or Claude is already in front. While held back, the
+    /// notch shows its amber badge and hovering opens the cards; switching to another app drops them down.
+    private func revealApprovalsIfAllowed() {
+        guard !requests.isEmpty, presence == .normal, !holdingApprovals else { return }
         alertTimer?.invalidate()
-        withAnimation(Motion.alert) { mode = .request }
+        if approvalSoundPending {
+            NSSound(named: "Sosumi")?.play()
+            approvalSoundPending = false
+        }
+        if mode != .request { withAnimation(Motion.alert) { mode = .request } }
     }
 
     // MARK: Alerts

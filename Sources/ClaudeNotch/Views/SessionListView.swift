@@ -36,6 +36,8 @@ struct SessionListView: View {
         .contextMenu {
             Toggle("Stay quiet in full screen", isOn: Binding(get: { model.policy.quietInFullScreen },
                                                                 set: { model.setQuietInFullScreen($0) }))
+            Toggle("Stay quiet when Claude is in front", isOn: Binding(get: { model.policy.quietWhenClaudeInFront },
+                                                                       set: { model.setQuietWhenClaudeInFront($0) }))
             if model.isPaused {
                 Button("Resume alerts") { model.resumeAlerts() }
             } else {

@@ -4,6 +4,18 @@ import XCTest
 final class QuietPolicyTests: XCTestCase {
     private let now = Fixture.t0
 
+    func testApprovalsWaitQuietlyWhileClaudeOrATerminalIsInFront() {
+        let policy = QuietPolicy()
+        XCTAssertTrue(policy.holdsApprovals(frontmostBundleID: "com.anthropic.claudefordesktop"))
+        XCTAssertTrue(policy.holdsApprovals(frontmostBundleID: "com.apple.Terminal"))
+        XCTAssertFalse(policy.holdsApprovals(frontmostBundleID: "com.google.Chrome"))
+        XCTAssertFalse(policy.holdsApprovals(frontmostBundleID: nil))
+    }
+
+    func testApprovalsAreNotHeldWhenTheOptionIsOff() {
+        XCTAssertFalse(QuietPolicy(quietWhenClaudeInFront: false).holdsApprovals(frontmostBundleID: "com.anthropic.claudefordesktop"))
+    }
+
     func testNormalByDefault() {
         XCTAssertEqual(QuietPolicy().presence(fullScreenActive: false, now: now), .normal)
     }

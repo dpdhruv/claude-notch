@@ -13,7 +13,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let screen = Self.notchScreen()
         // `.fullScreen` is set system-wide while a full-screen app (a film, a presentation) is in front.
         let model = NotchModel(geometry: Self.geometry(for: screen),
-                               isFullScreenAppActive: { NSApp.currentSystemPresentationOptions.contains(.fullScreen) })
+                               isFullScreenAppActive: { NSApp.currentSystemPresentationOptions.contains(.fullScreen) },
+                               frontmostBundleID: { NSWorkspace.shared.frontmostApplication?.bundleIdentifier })
         self.model = model
 
         let size = NotchGeometry.panelSize

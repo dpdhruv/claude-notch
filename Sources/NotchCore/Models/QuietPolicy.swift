@@ -14,12 +14,29 @@ public enum Presence: Equatable {
 public struct QuietPolicy: Equatable {
     /// Disappear completely while a full-screen app is in front.
     public var quietInFullScreen: Bool
+    /// Don't drop approval cards down over the app they are about to be answered in.
+    public var quietWhenClaudeInFront: Bool
     /// Manual "pause alerts" until this time.
     public var pausedUntil: Date?
 
-    public init(quietInFullScreen: Bool = true, pausedUntil: Date? = nil) {
+    public init(quietInFullScreen: Bool = true, quietWhenClaudeInFront: Bool = true, pausedUntil: Date? = nil) {
         self.quietInFullScreen = quietInFullScreen
+        self.quietWhenClaudeInFront = quietWhenClaudeInFront
         self.pausedUntil = pausedUntil
+    }
+
+    /// Apps where Claude shows its own approval dialog: the desktop app and the common terminals.
+    static let claudeSurfaces: Set<String> = [
+        "com.anthropic.claudefordesktop",
+        "com.apple.Terminal", "com.googlecode.iterm2", "dev.warp.Warp-Stable", "com.mitchellh.ghostty",
+        "net.kovidgoyal.kitty", "com.github.wez.wezterm", "org.alacritty", "co.zeit.hyper",
+    ]
+
+    /// Whether approval cards should wait quietly (a badge on the notch, no sound or drop-down) because the app in
+    /// front already shows Claude's own prompt.
+    public func holdsApprovals(frontmostBundleID: String?) -> Bool {
+        guard quietWhenClaudeInFront, let id = frontmostBundleID else { return false }
+        return Self.claudeSurfaces.contains(id)
     }
 
     public func presence(fullScreenActive: Bool, now: Date) -> Presence {
