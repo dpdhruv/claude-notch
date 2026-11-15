@@ -99,7 +99,16 @@ struct ServerStopControl: View {
                 button("Yes", tint: Palette.coral, filled: true) { confirming = false; onStop(server, false) }
                 button("No", tint: .white.opacity(0.6), filled: false) { confirming = false }
             } else {
-                button("Stop", tint: Palette.coral, filled: false) { confirming = true }
+                Button { confirming = true } label: {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(Palette.coral)
+                        .frame(width: 24, height: 24)
+                        .background(Circle().fill(Palette.coral.opacity(0.18)))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Stop this server")
             }
         }
     }
