@@ -28,6 +28,7 @@ struct NotchRootView: View {
         case .peek: AlertBar(model: model)
         case .expanded: SessionListView(model: model)
         case .request: RequestListView(model: model)
+        case .settings: SettingsView(model: model)
         }
     }
 }

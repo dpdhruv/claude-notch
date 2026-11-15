@@ -9,6 +9,8 @@ public enum NotchMode: Equatable {
     case expanded
     /// Permission prompts waiting for Allow/Deny.
     case request
+    /// The settings page, opened from the gear in the list.
+    case settings
 }
 
 /// Sizes and hit-testing for the notch panel, free of any UI framework so they can be tested.
@@ -43,6 +45,9 @@ public struct NotchGeometry {
     }
     public static let requestOverflowHeight: CGFloat = 22
 
+    public static let settingsRowHeight: CGFloat = 40
+    public static let settingsRowCount = 5
+
     public static let peekHeight: CGFloat = 46
     public static let peekMinWidth: CGFloat = 400
     private static let bottomPadding: CGFloat = 20
@@ -60,6 +65,9 @@ public struct NotchGeometry {
         case .expanded:
             let rows = CGFloat(max(1, min(sessionCount, Self.maxSessionRows)))
             return CGSize(width: Self.listWidth, height: notchHeight + rows * Self.sessionRowPitch + Self.bottomPadding)
+        case .settings:
+            let rows = CGFloat(Self.settingsRowCount)
+            return CGSize(width: Self.listWidth, height: notchHeight + rows * (Self.settingsRowHeight + Self.rowSpacing) + Self.bottomPadding)
         case .request:
             let shown = min(requestCount, Self.maxRequestRows)
             let rows = (0..<shown).reduce(CGFloat(0)) { total, index in
@@ -78,9 +86,9 @@ public struct NotchGeometry {
         mode == .collapsed ? CGSize(width: notchWidth + 16, height: notchHeight + 2) : drawnSize
     }
 
-    /// Only the list and the approval cards have anything to click. In other modes the window lets every click through.
+    /// Only the list, the approval cards and the settings page have anything to click. In other modes the window lets every click through.
     public static func acceptsClicks(in mode: NotchMode) -> Bool {
-        mode == .expanded || mode == .request
+        mode == .expanded || mode == .request || mode == .settings
     }
 
     // MARK: Hit testing

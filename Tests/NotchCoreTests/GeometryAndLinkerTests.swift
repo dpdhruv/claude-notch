@@ -23,7 +23,7 @@ final class NotchGeometryTests: XCTestCase {
     }
 
     func testEveryModeFitsInsideThePanel() {
-        for mode in [NotchMode.collapsed, .peek, .expanded, .request] {
+        for mode in [NotchMode.collapsed, .peek, .expanded, .request, .settings] {
             let size = geometry.size(for: mode, sessionCount: 99, requestCount: 99)
             XCTAssertLessThanOrEqual(size.width, NotchGeometry.panelSize.width, "\(mode)")
             XCTAssertLessThanOrEqual(size.height, NotchGeometry.panelSize.height, "\(mode)")
@@ -109,7 +109,8 @@ final class NotchInteractionTests: XCTestCase {
         XCTAssertEqual(geometry.hotZone(for: .expanded, drawnSize: drawn), drawn)
     }
 
-    func testOnlyTheListAndApprovalsAcceptClicks() {
+    func testOnlyTheListApprovalsAndSettingsAcceptClicks() {
+        XCTAssertTrue(NotchGeometry.acceptsClicks(in: .settings))
         XCTAssertTrue(NotchGeometry.acceptsClicks(in: .expanded))
         XCTAssertTrue(NotchGeometry.acceptsClicks(in: .request))
         XCTAssertFalse(NotchGeometry.acceptsClicks(in: .collapsed))

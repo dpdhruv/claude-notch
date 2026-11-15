@@ -51,6 +51,7 @@ final class NotchModel: ObservableObject {
         self.preferences = preferences
         self.isFullScreenAppActive = isFullScreenAppActive
         self.frontmostBundleID = frontmostBundleID
+        self.soundsEnabled = preferences.object(forKey: Self.soundsKey) as? Bool ?? true
         self.policy = QuietPolicy(quietInFullScreen: preferences.object(forKey: Self.quietInFullScreenKey) as? Bool ?? true,
                                   quietWhenClaudeInFront: preferences.object(forKey: Self.quietWhenClaudeInFrontKey) as? Bool ?? true)
     }
@@ -84,6 +85,30 @@ final class NotchModel: ObservableObject {
     }
 
     private static let quietInFullScreenKey = "quietInFullScreen"
+    private static let soundsKey = "soundsEnabled"
+
+    @Published private(set) var soundsEnabled = true
+
+    func setSoundsEnabled(_ enabled: Bool) {
+        soundsEnabled = enabled
+        preferences.set(enabled, forKey: Self.soundsKey)
+    }
+
+    private func play(_ name: String) {
+        if soundsEnabled { NSSound(named: name)?.play() }
+    }
+
+    // MARK: Settings page
+
+    func showSettings() {
+        guard mode == .expanded else { return }
+        withAnimation(Motion.reveal) { mode = .settings }
+    }
+
+    func hideSettings() {
+        guard mode == .settings else { return }
+        withAnimation(Motion.reveal) { mode = .expanded }
+    }
     private static let quietWhenClaudeInFrontKey = "quietWhenClaudeInFront"
 
     /// Claude (or a terminal) is in front, so approvals wait quietly instead of dropping down.
@@ -171,7 +196,7 @@ final class NotchModel: ObservableObject {
         pendingCollapse?.cancel()
         alertTimer?.invalidate()
         // With approvals waiting, hovering shows them (they may have been held back quietly) instead of the list.
-        let target: NotchMode = requests.isEmpty ? .expanded : .request
+        let target: NotchMode = requests.isEmpty ? (mode == .settings ? .settings : .expanded) : .request
         if mode != target { withAnimation(Motion.reveal) { mode = target } }
     }
 
@@ -286,7 +311,7 @@ final class NotchModel: ObservableObject {
         guard !requests.isEmpty, presence == .normal, !holdingApprovals else { return }
         alertTimer?.invalidate()
         if approvalSoundPending {
-            NSSound(named: "Sosumi")?.play()
+            play("Sosumi")
             approvalSoundPending = false
         }
         if mode != .request { withAnimation(Motion.alert) { mode = .request } }
@@ -298,7 +323,7 @@ final class NotchModel: ObservableObject {
     private func present(_ alert: NotchAlert, force: Bool = false) {
         guard force || (!isHovering && presence == .normal), requests.isEmpty else { return }
         self.alert = alert
-        if let sound = alert.kind.sound { NSSound(named: sound)?.play() }
+        if let sound = alert.kind.sound { play(sound) }
         withAnimation(Motion.alert) { mode = .peek }
 
         alertTimer?.invalidate()

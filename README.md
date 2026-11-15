@@ -103,16 +103,19 @@ Allow does not override your deny rules or Claude's other safeguards. It answers
 
 ## Quiet mode
 
-**When Claude is already in front.** If the Claude desktop app (or a terminal) is the app you're using, approval cards don't drop down and make no sound: Claude is showing its own prompt right there. The notch shows its amber badge instead, hovering it opens the cards, and switching to another app drops them down. They are held back rather than handed back to Claude, because the session that is asking may not be the one on your screen. Turn it off with *Stay quiet when Claude is in front* in the right-click menu.
+**When Claude is already in front.** If the Claude desktop app (or a terminal) is the app you're using, approval cards don't drop down and make no sound: Claude is showing its own prompt right there. The notch shows its amber badge instead, hovering it opens the cards, and switching to another app drops them down. They are held back rather than handed back to Claude, because the session that is asking may not be the one on your screen. Turn it off with *Quiet when Claude is in front* in the notch settings.
 
-Right-click the session list for the controls:
+Click the **gear** in the session list to open the settings inside the notch (the back arrow returns to the list):
 
-- **Stay quiet in full screen** (on by default). While a full-screen app is in front, the notch draws nothing, plays no sounds and lets every click through. When you leave full screen it returns, and any approval still waiting is shown.
-- **Pause alerts for 1 hour.** No sounds and no automatic drop-downs; the resting wings stay visible, with a small bell-slash icon, so you can still see state at a glance. **Resume alerts** ends it early.
+- **Quiet in full screen** (on by default). While a full-screen app is in front, the notch draws nothing, plays no sounds and lets every click through. When you leave full screen it returns, and any approval still waiting is shown.
+- **Sounds** can be switched off entirely.
+- **Pause alerts for 1 hour.** No sounds and no automatic drop-downs; the resting wings stay visible, with a small bell-slash icon, so you can still see state at a glance. **Resume** ends it early. Right-clicking the list also offers Settings, Pause and Quit.
 
 Approvals that arrive while quiet are not lost: they wait, and if you are still away after about 110 seconds they go back to Claude's own dialog.
 
 Full screen is detected from the system's own "an app is full screen" flag. A few players draw their own full-screen mode without setting it; if the notch still shows over one, use **Pause alerts**.
+
+<p align="center"><img src="docs/images/settings.png" width="560" alt="The settings page inside the notch"></p>
 
 ## How it works
 
