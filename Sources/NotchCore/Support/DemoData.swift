@@ -15,13 +15,13 @@ public enum DemoData {
                           cache: cache(300), context: ContextUsage(tokens: 720_000, window: 1_000_000), model: "Sonnet 5.5"),
             ClaudeSession(id: "demo-blog", title: "Write launch blog post", project: "marketing", state: .done,
                           detail: "Draft is ready, with three headline options at the top.", lastActivity: now.addingTimeInterval(-70),
-                          cache: cache(2970, longLived: true), context: ContextUsage(tokens: 96_000, window: 1_000_000), model: "Opus 5.5"),
+                          cache: cache(2970, longLived: true), context: ContextUsage(tokens: 96_000, window: 1_000_000), model: "Opus 5.5", isTerminal: true),
             ClaudeSession(id: "demo-export", title: "Data export script", project: "tools", state: .idle,
                           detail: "", lastActivity: now.addingTimeInterval(-2200),
                           cache: cache(1330, longLived: true), context: ContextUsage(tokens: 340_000, window: 1_000_000), model: "Sonnet 5.5"),
             ClaudeSession(id: "demo-copy", title: "Onboarding copy review", project: "docs", state: .idle,
                           detail: "", lastActivity: now.addingTimeInterval(-1100),
-                          cache: cache(-800), context: ContextUsage(tokens: 61_000, window: 1_000_000), model: "Haiku 5.5"),
+                          cache: cache(-800), context: ContextUsage(tokens: 61_000, window: 1_000_000), model: "Haiku 5.5", isTerminal: true),
         ]
     }
 

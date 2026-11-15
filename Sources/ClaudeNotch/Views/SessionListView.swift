@@ -72,6 +72,12 @@ struct SessionRow: View {
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
+                    if session.isTerminal {
+                        Image(systemName: "terminal")
+                            .font(.system(size: 9.5, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.45))
+                            .help("Started from the terminal")
+                    }
                     Pill(text: session.state.label, tint: tint)
                 }
                 Text(session.detail.isEmpty ? "\(session.project) · \(Format.duration(now.timeIntervalSince(session.lastActivity))) ago" : session.detail)

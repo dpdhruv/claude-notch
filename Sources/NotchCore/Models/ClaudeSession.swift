@@ -65,4 +65,6 @@ public struct ClaudeSession: Identifiable, Equatable {
     public var cache: PromptCache?
     public var context: ContextUsage
     public var model: String
+    /// Started from the `claude` command line rather than the desktop app.
+    public var isTerminal = false
 }

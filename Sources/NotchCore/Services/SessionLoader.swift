@@ -45,7 +45,8 @@ struct SessionLoader {
             lastActivity: lastActivity,
             cache: snapshot.promptCache,
             context: snapshot.contextUsage,
-            model: ModelCatalog.displayName(for: snapshot.lastAssistant?.model ?? ""))
+            model: ModelCatalog.displayName(for: snapshot.lastAssistant?.model ?? ""),
+            isTerminal: snapshot.isTerminal)
     }
 
     private func placeholder(id: String, snapshot: TranscriptSnapshot, fileModified: Date) -> ClaudeSession {
@@ -56,6 +57,6 @@ struct SessionLoader {
             context: ContextUsage(tokens: snapshot.compactedContextEstimate ?? 0,
                                   window: Config.standardContextWindow,
                                   isEstimate: snapshot.compactedContextEstimate != nil),
-            model: "")
+            model: "", isTerminal: snapshot.isTerminal)
     }
 }

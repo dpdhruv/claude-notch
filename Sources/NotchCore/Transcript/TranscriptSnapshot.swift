@@ -5,6 +5,8 @@ struct TranscriptSnapshot {
     private(set) var customTitle: String?
     private var firstAITitle: String?
     private(set) var cwd: String?
+    /// Whether the session was started from the `claude` command line rather than the desktop app.
+    private(set) var isTerminal = false
 
     /// The last real turn (typed prompt, tool result or assistant reply), ignoring housekeeping lines.
     private(set) var lastTurn: TranscriptEntry?
@@ -34,6 +36,7 @@ struct TranscriptSnapshot {
         if firstAITitle == nil, let ai = entry.aiTitle { firstAITitle = ai }
         guard !entry.isSidechain else { return }
         if let cwd = entry.cwd { self.cwd = cwd }
+        if let entrypoint = entry.raw["entrypoint"] as? String { isTerminal = entrypoint == "cli" }
 
         if entry.isAssistant {
             lastAssistant = entry

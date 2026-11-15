@@ -43,6 +43,15 @@ final class TranscriptSnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.contextUsage.window, 1_000_000)
     }
 
+    func testSessionsStartedFromTheCommandLineAreMarkedAsTerminal() {
+        var cli = Fixture.user(uuid: "u1", at: t0, content: "hi")
+        cli["entrypoint"] = "cli"
+        var desktop = cli
+        desktop["entrypoint"] = "claude-desktop"
+        XCTAssertTrue(TranscriptSnapshot(entries: Fixture.entries([cli])).isTerminal)
+        XCTAssertFalse(TranscriptSnapshot(entries: Fixture.entries([desktop])).isTerminal)
+    }
+
     // MARK: Prompt cache
 
     func testCacheLifetimeFollowsTheLastRequestThatWrote() {
