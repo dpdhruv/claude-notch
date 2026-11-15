@@ -28,7 +28,7 @@ Hover the notch to see every Claude Code and Claude desktop session at a glance.
 ## Quick start
 
 ```bash
-git clone <this repository> claude-notch      # or just copy the folder
+git clone https://github.com/dpdhruv/claude-notch.git      # or just copy the folder
 cd claude-notch
 ./scripts/install.sh
 ```
