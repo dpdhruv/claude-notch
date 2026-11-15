@@ -39,12 +39,18 @@ public struct RequestDetail: Equatable {
     public let headline: String
     /// Claude's own explanation (the Bash tool's `description`, a fetch prompt…), if it gave one.
     public let explanation: String?
+    /// The file or folder involved, when there is one.
+    public let location: String?
     /// The exact command, file change or arguments, capped so the card stays compact.
     public let lines: [Line]
 
-    public init(headline: String, explanation: String? = nil, lines: [Line]) {
+    /// What to lead the card with: Claude's own words when it gave any, otherwise the headline.
+    public var title: String { explanation ?? headline }
+
+    public init(headline: String, explanation: String? = nil, location: String? = nil, lines: [Line]) {
         self.headline = headline
         self.explanation = explanation
+        self.location = location
         self.lines = lines
     }
 }

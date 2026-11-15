@@ -140,7 +140,7 @@ final class RequestDetailTests: XCTestCase {
 
     func testWriteCountsLines() {
         let detail = ToolDescriber.detail(of: "Write", input: ["file_path": "/a/new.txt", "content": "a\nb\nc"])
-        XCTAssertTrue(detail.explanation?.hasSuffix("3 lines") ?? false)
+        XCTAssertTrue(detail.location?.hasSuffix("3 lines") ?? false)
         XCTAssertEqual(detail.lines.filter { $0.kind == .added }.count, 3)
     }
 

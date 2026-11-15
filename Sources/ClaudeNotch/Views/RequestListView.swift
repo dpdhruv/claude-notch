@@ -52,22 +52,13 @@ struct RequestRow: View {
             handoffRing(accent: accent)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(info.title)
+                    Text(request.detail.title)
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     if let risk { Pill(text: risk, tint: Palette.coral) }
-                    Spacer(minLength: 4)
-                    if let directory = request.directory {
-                        Text(directory)
-                            .font(.system(size: 9.5))
-                            .foregroundStyle(.white.opacity(0.35))
-                            .lineLimit(1)
-                            .truncationMode(.head)
-                            .frame(maxWidth: 120, alignment: .trailing)
-                    }
                 }
-                headline(request.detail)
+                subtitle(request.detail, session: info.title)
                 if !request.detail.lines.isEmpty { codeBox(request.detail.lines, accent: accent) }
                 Spacer(minLength: 0)
                 actions
@@ -81,22 +72,21 @@ struct RequestRow: View {
         .frame(height: NotchGeometry.requestRowHeight(bodyLines: request.detail.lines.count))
     }
 
-    /// What is about to happen, followed by Claude's own explanation when it gave one.
-    private func headline(_ detail: RequestDetail) -> some View {
+    /// The kind of action (when the title is Claude's own words), then the file involved and the session it came from.
+    private func subtitle(_ detail: RequestDetail, session: String) -> some View {
         HStack(spacing: 6) {
-            Text(detail.headline)
-                .font(.system(size: 11.5, weight: .semibold))
-                .foregroundStyle(Palette.amber)
-                .lineLimit(1)
-                .layoutPriority(1)
-            if let explanation = detail.explanation {
-                Text(explanation)
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+            if detail.explanation != nil {
+                Text(detail.headline)
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .foregroundStyle(Palette.amber)
+                    .layoutPriority(1)
             }
+            Text([detail.location, session].compactMap { $0 }.joined(separator: " · "))
+                .font(.system(size: 10.5))
+                .foregroundStyle(.white.opacity(0.45))
+                .truncationMode(.middle)
         }
+        .lineLimit(1)
     }
 
     /// The exact command or change, with removed and added lines coloured like a diff.

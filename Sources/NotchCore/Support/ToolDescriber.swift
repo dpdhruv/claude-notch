@@ -47,30 +47,30 @@ public enum ToolDescriber {
             return RequestDetail(headline: "Run shell command", explanation: string("description"),
                                  lines: capped(plain: string("command") ?? ""))
         case "Edit":
-            return RequestDetail(headline: "Edit \(file())", explanation: path(),
+            return RequestDetail(headline: "Edit \(file())", location: path(),
                                  lines: capped(removed: string("old_string") ?? "", added: string("new_string") ?? ""))
         case "MultiEdit":
             let edits = input["edits"] as? [[String: Any]] ?? []
             let first = edits.first
             let count = edits.count
-            return RequestDetail(headline: "Edit \(file())" + (count > 1 ? " (\(count) changes)" : ""), explanation: path(),
+            return RequestDetail(headline: "Edit \(file())" + (count > 1 ? " (\(count) changes)" : ""), location: path(),
                                  lines: capped(removed: first?["old_string"] as? String ?? "", added: first?["new_string"] as? String ?? ""))
         case "Write":
             let content = string("content") ?? ""
             let total = content.split(separator: "\n", omittingEmptySubsequences: false).count
-            return RequestDetail(headline: "Write \(file())", explanation: [path(), "\(total) line\(total == 1 ? "" : "s")"].compactMap { $0 }.joined(separator: " · "),
+            return RequestDetail(headline: "Write \(file())", location: [path(), "\(total) line\(total == 1 ? "" : "s")"].compactMap { $0 }.joined(separator: " · "),
                                  lines: capped(added: content))
         case "NotebookEdit":
-            return RequestDetail(headline: "Edit notebook \(file())", explanation: (input["notebook_path"] as? String).map(abbreviatingHome),
+            return RequestDetail(headline: "Edit notebook \(file())", location: (input["notebook_path"] as? String).map(abbreviatingHome),
                                  lines: capped(added: string("new_source") ?? ""))
         case "Read":
-            return RequestDetail(headline: "Read \(file())", explanation: path(), lines: [])
+            return RequestDetail(headline: "Read \(file())", location: path(), lines: [])
         case "WebFetch":
             return RequestDetail(headline: "Fetch a web page", explanation: string("prompt"), lines: capped(plain: string("url") ?? ""))
         case "WebSearch":
             return RequestDetail(headline: "Search the web", lines: capped(plain: string("query") ?? ""))
         case "Grep", "Glob":
-            return RequestDetail(headline: tool == "Grep" ? "Search file contents" : "Find files", explanation: string("path").map(abbreviatingHome),
+            return RequestDetail(headline: tool == "Grep" ? "Search file contents" : "Find files", location: string("path").map(abbreviatingHome),
                                  lines: capped(plain: string("pattern") ?? ""))
         default:
             let arguments = input.keys.sorted().map { key -> String in
