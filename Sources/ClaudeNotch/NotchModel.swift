@@ -14,6 +14,10 @@ final class NotchModel: ObservableObject {
     @Published private(set) var alert: NotchAlert?
     /// Servers that sessions have left running, by session id.
     @Published private(set) var servers: [String: [RunningServer]] = [:]
+    /// The session whose server list is open on its card.
+    @Published private(set) var serverMenuSessionID: String?
+    /// Servers that were asked to stop, and when.
+    @Published private(set) var stoppingServers: [String: Date] = [:]
     /// Pointer position in the notch's own coordinates (origin top-left), refreshed while the list is open.
     @Published var pointer: CGPoint?
     private(set) var isHovering = false
@@ -58,7 +62,7 @@ final class NotchModel: ObservableObject {
         monitor.$now.sink { [weak self] in self?.clockTicked($0) }.store(in: &cancellables)
         broker.$pending.receive(on: DispatchQueue.main).sink { [weak self] in self?.requestsChanged($0) }.store(in: &cancellables)
 
-        serverMonitor.$servers.receive(on: DispatchQueue.main).sink { [weak self] in self?.servers = $0 }.store(in: &cancellables)
+        serverMonitor.$servers.receive(on: DispatchQueue.main).sink { [weak self] in self?.serversChanged($0) }.store(in: &cancellables)
 
         broker.start()
         monitor.start()
@@ -166,6 +170,7 @@ final class NotchModel: ObservableObject {
 
     private func collapse() {
         guard requests.isEmpty else { return }
+        serverMenuSessionID = nil
         withAnimation(Motion.settle) { mode = .collapsed }
     }
 
@@ -194,8 +199,28 @@ final class NotchModel: ObservableObject {
     }
 
     func openSession(atRow row: Int) {
-        guard sessions.indices.contains(row) else { return }
+        guard sessions.indices.contains(row), sessions[row].id != serverMenuSessionID else { return }
         open(sessionID: sessions[row].id, title: sessions[row].title)
+    }
+
+    // MARK: Servers
+
+    func toggleServerMenu(forSession id: String) {
+        serverMenuSessionID = serverMenuSessionID == id ? nil : id
+    }
+
+    func stopServer(_ server: RunningServer, force: Bool = false) {
+        stoppingServers[server.id] = Date()
+        serverMonitor.stop(server, force: force) { [weak self] outcome in
+            if outcome == .gone { self?.stoppingServers[server.id] = nil }
+        }
+    }
+
+    private func serversChanged(_ servers: [String: [RunningServer]]) {
+        self.servers = servers
+        let running = Set(servers.values.joined().map(\.id))
+        stoppingServers = stoppingServers.filter { running.contains($0.key) }
+        if let open = serverMenuSessionID, servers[open] == nil { serverMenuSessionID = nil }
     }
 
     // MARK: Reacting to data
@@ -253,7 +278,9 @@ final class NotchModel: ObservableObject {
     }
 
     /// Freezes the model in one state, for rendering documentation screenshots. Never call `start()` afterwards.
-    func freeze(mode: NotchMode, alert: NotchAlert? = nil, pointer: CGPoint? = nil) {
+    func freeze(mode: NotchMode, alert: NotchAlert? = nil, pointer: CGPoint? = nil, serverMenu: String? = nil, stopping: [String: Date] = [:]) {
+        self.serverMenuSessionID = serverMenu
+        self.stoppingServers = stopping
         self.mode = mode
         self.alert = alert
         self.pointer = pointer

@@ -16,14 +16,14 @@ enum ScreenshotRenderer {
         let sessions = DemoData.sessions(now: now)
         let approvals = DemoData.approvals(now: now)
 
-        func model(mode: NotchMode, requests: [PermissionRequest] = [], alert: NotchAlert? = nil, pointer: CGPoint? = nil, sessions: [ClaudeSession] = sessions) -> NotchModel {
+        func model(mode: NotchMode, requests: [PermissionRequest] = [], alert: NotchAlert? = nil, pointer: CGPoint? = nil, serverMenu: String? = nil, sessions: [ClaudeSession] = sessions) -> NotchModel {
             let model = NotchModel(geometry: geometry,
                                    monitor: SessionMonitor(fixedSessions: sessions, now: now),
                                    broker: PermissionBroker(fixedPending: requests),
                                    linker: SessionLinker(),
                                    serverMonitor: ServerMonitor(fixed: DemoData.servers),
                                    preferences: UserDefaults(suiteName: "claude-notch-screenshots") ?? .standard)
-            model.freeze(mode: mode, alert: alert, pointer: pointer)
+            model.freeze(mode: mode, alert: alert, pointer: pointer, serverMenu: serverMenu)
             return model
         }
 
@@ -36,6 +36,7 @@ enum ScreenshotRenderer {
             ("collapsed.png", model(mode: .collapsed, sessions: resting), 110),
             ("alert.png", model(mode: .peek, alert: alert), 150),
             ("session-list.png", model(mode: .expanded, pointer: hoverSecondCard), 470),
+            ("stop-server.png", model(mode: .expanded, serverMenu: "demo-checkout"), 470),
             ("approvals.png", model(mode: .request, requests: approvals), 270),
         ]
         for scene in scenes {

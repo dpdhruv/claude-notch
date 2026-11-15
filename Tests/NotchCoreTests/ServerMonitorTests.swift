@@ -9,7 +9,8 @@ final class ServerAttributionTests: XCTestCase {
         let processes = [P(pid: 10, ppid: 1, command: "claude"), P(pid: 11, ppid: 10, command: "/bin/zsh -c npm run dev"),
                          P(pid: 12, ppid: 11, command: "node /work/app/node_modules/.bin/vite --port 5173")]
         let found = ServerAttribution.attribute(processes: processes, sessions: [10: claude], listeners: [12: [5173]], cwds: [:])
-        XCTAssertEqual(found, [RunningServer(pid: 12, port: 5173, name: "vite", sessionID: "s1")])
+        XCTAssertEqual(found, [RunningServer(pid: 12, port: 5173, name: "vite", sessionID: "s1",
+                                             command: "node /work/app/node_modules/.bin/vite --port 5173")])
     }
 
     func testSessionsOwnListeningPortIsNotAServer() {
@@ -30,6 +31,33 @@ final class ServerAttributionTests: XCTestCase {
                          P(pid: 7, ppid: 6, command: "node /work/app/node_modules/.bin/vite")]
         let found = ServerAttribution.attribute(processes: processes, sessions: [10: claude], listeners: [7: [5173]], cwds: [7: "/work/app/web"])
         XCTAssertEqual(found.map(\.sessionID), ["s1"])
+        XCTAssertTrue(found[0].managedByApp)
+    }
+
+    func testStopTargetsAreTheServerAndItsWrappersButNeverClaude() {
+        let processes = [P(pid: 10, ppid: 1, command: "claude"), P(pid: 11, ppid: 10, command: "/bin/zsh -c npm run dev"),
+                         P(pid: 12, ppid: 11, command: "npm run dev"), P(pid: 13, ppid: 12, command: "node vite")]
+        let server = RunningServer(pid: 13, port: 5173, name: "vite", sessionID: "s1")
+        XCTAssertEqual(ServerAttribution.stopTargets(for: server, processes: processes, sessions: [10: claude]), [13, 12, 11])
+    }
+
+    func testStopTargetsStopAtTheClaudeApp() {
+        let processes = [P(pid: 5, ppid: 1, command: "/Applications/Claude.app/Contents/MacOS/Claude"),
+                         P(pid: 6, ppid: 5, command: "/Applications/Claude.app/Contents/Helpers/disclaimer -- npm run dev"),
+                         P(pid: 7, ppid: 6, command: "sh -c vite"), P(pid: 8, ppid: 7, command: "node vite")]
+        let server = RunningServer(pid: 8, port: 5173, name: "vite", sessionID: "s1")
+        XCTAssertEqual(ServerAttribution.stopTargets(for: server, processes: processes, sessions: [:]), [8, 7])
+    }
+
+    func testSignalReachesARealProcessAndReportsDeadOnes() throws {
+        let child = Process()
+        child.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        child.arguments = ["30"]
+        try child.run()
+        XCTAssertEqual(ServerMonitor.signal([Int(child.processIdentifier)], SIGTERM), 1)
+        child.waitUntilExit()
+        XCTAssertEqual(child.terminationReason, .uncaughtSignal)
+        XCTAssertEqual(ServerMonitor.signal([Int(child.processIdentifier)], SIGTERM), 0, "an exited process is not signalled twice")
     }
 
     func testLabels() {

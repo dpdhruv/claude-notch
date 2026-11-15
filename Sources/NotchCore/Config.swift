@@ -11,6 +11,8 @@ public enum Config {
     /// How often transcripts are re-read.
     public static let pollInterval: TimeInterval = 1.5
     /// How often to look for servers left running by sessions (it runs `ps` and `lsof`, so not every tick).
+    /// How long a stopping server gets before the notch offers to force-stop it.
+    public static let forceStopAfter: TimeInterval = 3
     public static let serverPollInterval: TimeInterval = 5
     /// Bytes read from the end of a transcript, smallest first. Large transcripts can end in a long run of
     /// attachments and metadata, so the window is widened until a real message turns up.

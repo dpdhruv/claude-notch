@@ -33,6 +33,7 @@ Hover the notch to see every Claude Code and Claude desktop session at a glance.
 | **Alerts** (with a sound) | A session **needs you** (permission prompt, question, plan to approve) · a session **finished** · a **prompt cache is about to expire** · a cache **went cold**. |
 | **Hover** | One card per session: state, what it is doing right now, a **cache countdown ring**, and **context-window usage** (`212k / 1M · 21%`). |
 | **Click a card** | Opens that session in the Claude desktop app. For terminal sessions it copies `claude --resume <id>` instead. |
+| **Servers** | A green `● :5173` chip on a card means that session left a server running. Click it for **Stop** (asks once; offers **Force stop** if the server ignores the polite request). Only servers a session started are listed, never your own. |
 | **Quiet mode** | Disappears completely while a full-screen app (a film, a presentation) is in front: no sound, no drop-downs, nothing drawn. Or pause alerts for an hour by hand. |
 | **Approvals** | Permission prompts appear as cards with the command, a risk flag for things like `rm -rf`, and **Deny / Allow** buttons. Several sessions can wait at once. |
 
@@ -143,6 +144,7 @@ Full screen is detected from the system's own "an app is full screen" flag. A fe
 - The cache countdown is an estimate (see above). The context figure is a snapshot of the last reply and does not include a prompt you have just typed.
 - Clicking a card needs the Claude desktop app, with its "entry points" setting on. Terminal sessions get a copied resume command instead.
 - The deep link format and the desktop app's session metadata are internal to Claude and may change; if they do, clicking falls back to the resume command.
+- Stopping a server also stops the shell and `npm` wrapper Claude started around it, never the session itself. Servers started by the Claude app's preview feature are marked "app-managed" and the app may start them again.
 - The risk flag is a simple pattern match on shell commands. It is a nudge, not a security boundary.
 - Full-screen detection depends on the system flag described under Quiet mode; use Pause alerts for players that don't set it.
 - Only the display with the notch is used. On a Mac without one the pill sits at the top centre of the main display.

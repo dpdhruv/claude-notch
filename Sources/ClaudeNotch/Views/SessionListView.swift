@@ -16,7 +16,11 @@ struct SessionListView: View {
                         .frame(height: NotchGeometry.sessionRowHeight)
                 }
                 ForEach(Array(model.sessions.enumerated()), id: \.element.id) { index, session in
-                    SessionRow(session: session, servers: model.servers[session.id] ?? [], now: model.monitor.now, isHovered: model.hoveredRow == index)
+                    SessionRow(session: session, servers: model.servers[session.id] ?? [], now: model.monitor.now,
+                               isHovered: model.hoveredRow == index, serverMenuOpen: model.serverMenuSessionID == session.id,
+                               stopping: model.stoppingServers,
+                               onToggleServers: { model.toggleServerMenu(forSession: session.id) },
+                               onStop: { server, force in model.stopServer(server, force: force) })
                 }
             }
             .padding(.horizontal, NotchGeometry.listInset)
@@ -60,6 +64,10 @@ struct SessionRow: View {
     let servers: [RunningServer]
     let now: Date
     let isHovered: Bool
+    let serverMenuOpen: Bool
+    let stopping: [String: Date]
+    let onToggleServers: () -> Void
+    let onStop: (RunningServer, Bool) -> Void
 
     var body: some View {
         let tint = Palette.tint(for: session.state)
@@ -87,7 +95,7 @@ struct SessionRow: View {
                         .foregroundStyle(.white.opacity(0.6))
                         .lineLimit(1)
                     Spacer(minLength: 0)
-                    if !servers.isEmpty { ServerChip(servers: servers) }
+                    if !servers.isEmpty { ServerChip(servers: servers, action: onToggleServers) }
                 }
                 ContextBar(context: session.context, model: session.model)
             }
@@ -102,28 +110,120 @@ struct SessionRow: View {
                 .padding(9)
                 .opacity(isHovered ? 1 : 0)
         }
+        .overlay {
+            if serverMenuOpen {
+                ServerMenu(servers: servers, stopping: stopping, now: now, onStop: onStop, onClose: onToggleServers)
+            }
+        }
         .scaleEffect(isHovered ? 1.012 : 1)
         .animation(.easeOut(duration: 0.12), value: isHovered)
         .frame(height: NotchGeometry.sessionRowHeight)
     }
 }
 
-/// "● :5173" for a server a session left running; "+1" when there are more.
+/// "● :5173" for a server a session left running; "+1" when there are more. Click to manage them.
 struct ServerChip: View {
     let servers: [RunningServer]
+    let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 4) {
-            Circle().fill(Palette.mint).frame(width: 5, height: 5)
-            Text(":\(servers[0].port)" + (servers.count > 1 ? " +\(servers.count - 1)" : ""))
-                .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Circle().fill(Palette.mint).frame(width: 5, height: 5)
+                Text(":\(servers[0].port)" + (servers.count > 1 ? " +\(servers.count - 1)" : ""))
+                    .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+            }
+            .foregroundStyle(Palette.mint)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(Palette.mint.opacity(0.14)))
         }
-        .foregroundStyle(Palette.mint)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .background(Capsule().fill(Palette.mint.opacity(0.14)))
+        .buttonStyle(.plain)
         .fixedSize()
-        .help(servers.map { "\($0.name) on port \($0.port)" }.joined(separator: "\n"))
+        .help(servers.map { "\($0.name) on port \($0.port)" }.joined(separator: "\n") + "\nClick to stop")
+    }
+}
+
+/// Replaces a card's contents while its servers are open: each with a Stop button that asks once before acting.
+struct ServerMenu: View {
+    let servers: [RunningServer]
+    let stopping: [String: Date]
+    let now: Date
+    let onStop: (RunningServer, Bool) -> Void
+    let onClose: () -> Void
+    private static let visibleRows = 2
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            VStack(spacing: 4) {
+                ForEach(servers.prefix(Self.visibleRows)) { server in
+                    ServerMenuRow(server: server, stoppingSince: stopping[server.id], now: now, onStop: onStop)
+                }
+                if servers.count > Self.visibleRows {
+                    Text("+\(servers.count - Self.visibleRows) more").font(.system(size: 9.5)).foregroundStyle(.white.opacity(0.4))
+                }
+            }
+            Button(action: onClose) {
+                Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(.white.opacity(0.55))
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(white: 0.09)))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.mint.opacity(0.35), lineWidth: 1))
+    }
+}
+
+struct ServerMenuRow: View {
+    let server: RunningServer
+    let stoppingSince: Date?
+    let now: Date
+    let onStop: (RunningServer, Bool) -> Void
+    @State private var confirming = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle().fill(Palette.mint).frame(width: 5, height: 5)
+            Text(server.name).font(.system(size: 11, weight: .semibold, design: .monospaced)).foregroundStyle(.white).lineLimit(1)
+            Text(verbatim: ":" + String(server.port)).font(.system(size: 11, design: .monospaced)).foregroundStyle(.white.opacity(0.5))
+            if server.managedByApp {
+                Text("app-managed").font(.system(size: 9)).foregroundStyle(.white.opacity(0.35)).help("Started by the Claude app's preview, which may start it again")
+            }
+            Spacer(minLength: 4)
+            control
+        }
+        .frame(height: 22)
+    }
+
+    @ViewBuilder private var control: some View {
+        if let since = stoppingSince {
+            if now.timeIntervalSince(since) > Config.forceStopAfter {
+                button("Force stop", tint: Palette.coral, filled: true) { onStop(server, true) }
+            } else {
+                Text("Stopping…").font(.system(size: 10.5)).foregroundStyle(.white.opacity(0.5))
+            }
+        } else if confirming {
+            Text("Stop it?").font(.system(size: 10.5)).foregroundStyle(.white.opacity(0.6))
+            button("Yes", tint: Palette.coral, filled: true) { confirming = false; onStop(server, false) }
+            button("No", tint: .white.opacity(0.6), filled: false) { confirming = false }
+        } else {
+            button("Stop", tint: Palette.coral, filled: false) { confirming = true }
+        }
+    }
+
+    private func button(_ title: String, tint: Color, filled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 10.5, weight: .semibold))
+                .foregroundStyle(filled ? Color.black : tint)
+                .padding(.horizontal, 9)
+                .frame(height: 20)
+                .background(Capsule().fill(filled ? tint : tint.opacity(0.16)))
+        }
+        .buttonStyle(.plain)
     }
 }
 
