@@ -42,6 +42,8 @@ public struct Paths {
     public var permissionRequests: URL { notchDir.appendingPathComponent("requests") }
     public var permissionResponses: URL { notchDir.appendingPathComponent("responses") }
     /// Touched regularly while the app runs; the permission hook only intercepts prompts while it is fresh.
+    /// Held for as long as the app runs, so a second copy knows to quit.
+    public var instanceLock: URL { notchDir.appendingPathComponent("app.lock") }
     public var heartbeat: URL { notchDir.appendingPathComponent("alive") }
     public var installedBinary: URL { notchDir.appendingPathComponent("bin/ClaudeNotch") }
 }

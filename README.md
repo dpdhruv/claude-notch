@@ -174,6 +174,14 @@ Full screen is detected from the system's own "an app is full screen" flag. A fe
 
 Timings, thresholds and window sizes all live in one file, [`Sources/NotchCore/Config.swift`](Sources/NotchCore/Config.swift). Rebuild with `./scripts/install.sh` after changing it.
 
+## Starting and restarting
+
+Only one notch runs at a time. If you start it again (by hand, or a login item firing while one is already up) the second copy says "already running" and quits, so you never get two stacked notches. To start it after quitting:
+
+```bash
+nohup ~/.claude-notch/bin/ClaudeNotch >/dev/null 2>&1 &
+```
+
 ## Troubleshooting
 
 Start with:
