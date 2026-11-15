@@ -4,10 +4,11 @@ import XCTest
 final class QuietPolicyTests: XCTestCase {
     private let now = Fixture.t0
 
-    func testApprovalsWaitQuietlyWhileClaudeOrATerminalIsInFront() {
+    func testApprovalsWaitQuietlyOnlyWhileTheClaudeAppIsInFront() {
         let policy = QuietPolicy()
         XCTAssertTrue(policy.holdsApprovals(frontmostBundleID: "com.anthropic.claudefordesktop"))
-        XCTAssertTrue(policy.holdsApprovals(frontmostBundleID: "com.apple.Terminal"))
+        XCTAssertFalse(policy.holdsApprovals(frontmostBundleID: "com.apple.Terminal"), "a terminal in front must not hide approvals")
+        XCTAssertFalse(policy.holdsApprovals(frontmostBundleID: "co.zeit.hyper"))
         XCTAssertFalse(policy.holdsApprovals(frontmostBundleID: "com.google.Chrome"))
         XCTAssertFalse(policy.holdsApprovals(frontmostBundleID: nil))
     }

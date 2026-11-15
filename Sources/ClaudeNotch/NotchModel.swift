@@ -86,6 +86,16 @@ final class NotchModel: ObservableObject {
     }
 
     private static let quietInFullScreenKey = "quietInFullScreen"
+    /// Troubleshooting aid: create `~/.claude-notch/debug` and decisions are appended to `~/.claude-notch/debug.log`.
+    private static func debug(_ line: String) {
+        let dir = Paths.live.notchDir
+        guard FileManager.default.fileExists(atPath: dir.appendingPathComponent("debug").path),
+              let data = ("\(Date()) \(line)\n").data(using: .utf8) else { return }
+        let log = dir.appendingPathComponent("debug.log")
+        if let handle = try? FileHandle(forWritingTo: log) { handle.seekToEndOfFile(); handle.write(data); try? handle.close() }
+        else { try? data.write(to: log) }
+    }
+
     private static let soundsKey = "soundsEnabled"
     private static let shortcutsKey = "shortcutsEnabled"
 
@@ -349,6 +359,7 @@ final class NotchModel: ObservableObject {
     /// Drops the approval cards down, unless the notch is quiet or Claude is already in front. While held back, the
     /// notch shows its amber badge and hovering opens the cards; switching to another app drops them down.
     private func revealApprovalsIfAllowed() {
+        if !requests.isEmpty { Self.debug("reveal? presence=\(presence) front=\(frontmostBundleID() ?? "nil") holding=\(holdingApprovals) mode=\(mode) hovering=\(isHovering)") }
         guard !requests.isEmpty, presence == .normal, !holdingApprovals else { return }
         alertTimer?.invalidate()
         if approvalSoundPending {

@@ -114,7 +114,7 @@ Allow does not override your deny rules or Claude's other safeguards. It answers
 
 ## Quiet mode
 
-**When Claude is already in front.** If the Claude desktop app (or a terminal) is the app you're using, approval cards don't drop down and make no sound: Claude is showing its own prompt right there. The notch shows its amber badge instead, hovering it opens the cards, and switching to another app drops them down. They are held back rather than handed back to Claude, because the session that is asking may not be the one on your screen. Turn it off with *Quiet when Claude is in front* in the notch settings.
+**When Claude is already in front.** If the Claude desktop app is the app you're using, approval cards don't drop down and make no sound: Claude is showing its own prompt right there. The notch shows its amber badge instead, hovering it opens the cards, and switching to another app drops them down. They are held back rather than handed back to Claude, because the session that is asking may not be the one on your screen. Turn it off with *Quiet when Claude is in front* in the notch settings.
 
 Use the tabs along the bottom of the notch: **Sessions**, **Servers** and **Settings**:
 
@@ -186,6 +186,8 @@ nohup ~/.claude-notch/bin/ClaudeNotch >/dev/null 2>&1 &
 ```
 
 ## Troubleshooting
+
+If approvals behave oddly, `touch ~/.claude-notch/debug` makes the app append its approval decisions (which app is in front, whether cards are being held back) to `~/.claude-notch/debug.log`. Delete the `debug` file to stop.
 
 Start with:
 

@@ -25,12 +25,9 @@ public struct QuietPolicy: Equatable {
         self.pausedUntil = pausedUntil
     }
 
-    /// Apps where Claude shows its own approval dialog: the desktop app and the common terminals.
-    static let claudeSurfaces: Set<String> = [
-        "com.anthropic.claudefordesktop",
-        "com.apple.Terminal", "com.googlecode.iterm2", "dev.warp.Warp-Stable", "com.mitchellh.ghostty",
-        "net.kovidgoyal.kitty", "com.github.wez.wezterm", "org.alacritty", "co.zeit.hyper",
-    ]
+    /// The Claude desktop app, where Claude shows its own approval dialog. Terminals are deliberately not here: a
+    /// terminal in front says nothing about whether the session that is asking is the one on screen.
+    static let claudeSurfaces: Set<String> = ["com.anthropic.claudefordesktop"]
 
     /// Whether approval cards should wait quietly (a badge on the notch, no sound or drop-down) because the app in
     /// front already shows Claude's own prompt.
