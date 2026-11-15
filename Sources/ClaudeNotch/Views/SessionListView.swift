@@ -16,7 +16,7 @@ struct SessionListView: View {
                         .frame(height: NotchGeometry.sessionRowHeight)
                 }
                 ForEach(Array(model.sessions.enumerated()), id: \.element.id) { index, session in
-                    SessionRow(session: session, now: model.monitor.now, isHovered: model.hoveredRow == index)
+                    SessionRow(session: session, servers: model.servers[session.id] ?? [], now: model.monitor.now, isHovered: model.hoveredRow == index)
                 }
             }
             .padding(.horizontal, NotchGeometry.listInset)
@@ -57,6 +57,7 @@ struct SessionListView: View {
 
 struct SessionRow: View {
     let session: ClaudeSession
+    let servers: [RunningServer]
     let now: Date
     let isHovered: Bool
 
@@ -80,10 +81,14 @@ struct SessionRow: View {
                     }
                     Pill(text: session.state.label, tint: tint)
                 }
-                Text(session.detail.isEmpty ? "\(session.project) · \(Format.duration(now.timeIntervalSince(session.lastActivity))) ago" : session.detail)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(session.detail.isEmpty ? "\(session.project) · \(Format.duration(now.timeIntervalSince(session.lastActivity))) ago" : session.detail)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    if !servers.isEmpty { ServerChip(servers: servers) }
+                }
                 ContextBar(context: session.context, model: session.model)
             }
         }
@@ -100,6 +105,25 @@ struct SessionRow: View {
         .scaleEffect(isHovered ? 1.012 : 1)
         .animation(.easeOut(duration: 0.12), value: isHovered)
         .frame(height: NotchGeometry.sessionRowHeight)
+    }
+}
+
+/// "● :5173" for a server a session left running; "+1" when there are more.
+struct ServerChip: View {
+    let servers: [RunningServer]
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle().fill(Palette.mint).frame(width: 5, height: 5)
+            Text(":\(servers[0].port)" + (servers.count > 1 ? " +\(servers.count - 1)" : ""))
+                .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+        }
+        .foregroundStyle(Palette.mint)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(Capsule().fill(Palette.mint.opacity(0.14)))
+        .fixedSize()
+        .help(servers.map { "\($0.name) on port \($0.port)" }.joined(separator: "\n"))
     }
 }
 

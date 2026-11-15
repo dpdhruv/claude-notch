@@ -21,6 +21,7 @@ enum ScreenshotRenderer {
                                    monitor: SessionMonitor(fixedSessions: sessions, now: now),
                                    broker: PermissionBroker(fixedPending: requests),
                                    linker: SessionLinker(),
+                                   serverMonitor: ServerMonitor(fixed: DemoData.servers),
                                    preferences: UserDefaults(suiteName: "claude-notch-screenshots") ?? .standard)
             model.freeze(mode: mode, alert: alert, pointer: pointer)
             return model

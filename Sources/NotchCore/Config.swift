@@ -10,6 +10,8 @@ public enum Config {
     public static let sessionWindow: TimeInterval = 12 * 3600
     /// How often transcripts are re-read.
     public static let pollInterval: TimeInterval = 1.5
+    /// How often to look for servers left running by sessions (it runs `ps` and `lsof`, so not every tick).
+    public static let serverPollInterval: TimeInterval = 5
     /// Bytes read from the end of a transcript, smallest first. Large transcripts can end in a long run of
     /// attachments and metadata, so the window is widened until a real message turns up.
     public static let transcriptTailSizes = [300_000, 3_000_000, 24_000_000]

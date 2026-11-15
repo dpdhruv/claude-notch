@@ -79,12 +79,14 @@ enum CommandLineTool {
         let events = HookInstaller().installedEvents()
         let heartbeatAge = (try? fm.attributesOfItem(atPath: paths.heartbeat.path)[.modificationDate] as? Date)?.flatMap { Date().timeIntervalSince($0) }
         let sessions = SessionMonitor.scanOnce(paths: paths)
+        let servers = ServerMonitor.scan(paths: paths)
 
         print("""
         ClaudeNotch \(Config.version)
           Claude config      \(paths.claudeDir.path)
           Transcripts        \(fm.fileExists(atPath: paths.transcripts.path) ? "found" : "NOT FOUND") (\(sessions.count) recent session\(sessions.count == 1 ? "" : "s"))
           Hooks              \(events.isEmpty ? "not installed (run: ClaudeNotch install-hooks)" : "installed for \(events.joined(separator: ", "))")
+          Servers            \(servers.isEmpty ? "none from sessions" : servers.map { ":\($0.port) \($0.name)" }.joined(separator: ", "))
           App                \(heartbeatAge.map { $0 < 6 ? "running" : "not running" } ?? "not running")
           Data directory     \(paths.notchDir.path)
         """)

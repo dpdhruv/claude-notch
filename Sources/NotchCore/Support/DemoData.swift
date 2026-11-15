@@ -25,6 +25,12 @@ public enum DemoData {
         ]
     }
 
+    public static let servers = [
+        RunningServer(pid: 1, port: 3000, name: "next", sessionID: "demo-checkout"),
+        RunningServer(pid: 2, port: 6006, name: "storybook", sessionID: "demo-checkout"),
+        RunningServer(pid: 3, port: 5173, name: "vite", sessionID: "demo-export"),
+    ]
+
     public static func approvals(now: Date) -> [PermissionRequest] {
         [
             PermissionRequest(id: "r1", sessionID: "demo-ci", toolName: "Bash",

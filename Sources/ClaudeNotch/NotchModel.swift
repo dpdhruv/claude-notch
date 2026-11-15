@@ -7,10 +7,13 @@ import NotchCore
 final class NotchModel: ObservableObject {
     let monitor: SessionMonitor
     let broker: PermissionBroker
+    private let serverMonitor: ServerMonitor
     let geometry: NotchGeometry
 
     @Published private(set) var mode: NotchMode = .collapsed
     @Published private(set) var alert: NotchAlert?
+    /// Servers that sessions have left running, by session id.
+    @Published private(set) var servers: [String: [RunningServer]] = [:]
     /// Pointer position in the notch's own coordinates (origin top-left), refreshed while the list is open.
     @Published var pointer: CGPoint?
     private(set) var isHovering = false
@@ -30,10 +33,12 @@ final class NotchModel: ObservableObject {
 
     /// - Parameter isFullScreenAppActive: asked once a second whether a full-screen app is in front.
     init(geometry: NotchGeometry, monitor: SessionMonitor, broker: PermissionBroker, linker: SessionLinker,
-         preferences: UserDefaults = .standard, isFullScreenAppActive: @escaping () -> Bool = { false }) {
+         serverMonitor: ServerMonitor = ServerMonitor(fixed: []), preferences: UserDefaults = .standard, isFullScreenAppActive: @escaping () -> Bool = { false }) {
         self.geometry = geometry
         self.monitor = monitor
         self.broker = broker
+        self.serverMonitor = serverMonitor
+        self.servers = serverMonitor.servers
         self.linker = linker
         self.preferences = preferences
         self.isFullScreenAppActive = isFullScreenAppActive
@@ -43,7 +48,7 @@ final class NotchModel: ObservableObject {
     /// The real thing, reading this Mac's Claude data.
     convenience init(geometry: NotchGeometry, paths: Paths = .live, isFullScreenAppActive: @escaping () -> Bool = { false }) {
         self.init(geometry: geometry, monitor: SessionMonitor(paths: paths), broker: PermissionBroker(paths: paths),
-                  linker: SessionLinker(paths: paths), isFullScreenAppActive: isFullScreenAppActive)
+                  linker: SessionLinker(paths: paths), serverMonitor: ServerMonitor(paths: paths), isFullScreenAppActive: isFullScreenAppActive)
     }
 
     /// Wires the data sources to the notch and starts them.
@@ -53,13 +58,17 @@ final class NotchModel: ObservableObject {
         monitor.$now.sink { [weak self] in self?.clockTicked($0) }.store(in: &cancellables)
         broker.$pending.receive(on: DispatchQueue.main).sink { [weak self] in self?.requestsChanged($0) }.store(in: &cancellables)
 
+        serverMonitor.$servers.receive(on: DispatchQueue.main).sink { [weak self] in self?.servers = $0 }.store(in: &cancellables)
+
         broker.start()
         monitor.start()
+        serverMonitor.start()
     }
 
     func stop() {
         broker.stop()
         monitor.stop()
+        serverMonitor.stop()
     }
 
     private static let quietInFullScreenKey = "quietInFullScreen"
