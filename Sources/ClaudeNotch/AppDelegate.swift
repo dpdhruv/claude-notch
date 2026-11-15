@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var model: NotchModel?
     private var pointerTimer: Timer?
     private var presenceObserver: AnyCancellable?
+    private var menuBar: MenuBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let screen = Self.notchScreen()
@@ -32,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             panel?.ignoresMouseEvents = presence == .hidden
         }
 
+        menuBar = MenuBarController(model: model)
         model.start()
         if ProcessInfo.processInfo.environment["CLAUDE_NOTCH_EXPANDED"] != nil { model.forceExpanded() }
         trackPointer(on: screen)
