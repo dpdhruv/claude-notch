@@ -51,7 +51,7 @@ public struct NotchGeometry {
     public static let requestOverflowHeight: CGFloat = 22
 
     public static let settingsRowHeight: CGFloat = 40
-    public static let settingsRowCount = 6
+    public static let settingsRowCount = 5
 
     public static let peekHeight: CGFloat = 46
     public static let peekMinWidth: CGFloat = 400

@@ -52,7 +52,6 @@ final class NotchModel: ObservableObject {
         self.isFullScreenAppActive = isFullScreenAppActive
         self.frontmostBundleID = frontmostBundleID
         self.soundsEnabled = preferences.object(forKey: Self.soundsKey) as? Bool ?? true
-        self.menuBarIconEnabled = preferences.object(forKey: Self.menuBarIconKey) as? Bool ?? true
         self.policy = QuietPolicy(quietInFullScreen: preferences.object(forKey: Self.quietInFullScreenKey) as? Bool ?? true,
                                   quietWhenClaudeInFront: preferences.object(forKey: Self.quietWhenClaudeInFrontKey) as? Bool ?? true)
     }
@@ -87,15 +86,8 @@ final class NotchModel: ObservableObject {
 
     private static let quietInFullScreenKey = "quietInFullScreen"
     private static let soundsKey = "soundsEnabled"
-    private static let menuBarIconKey = "menuBarIcon"
 
     @Published private(set) var soundsEnabled = true
-    @Published private(set) var menuBarIconEnabled = true
-
-    func setMenuBarIconEnabled(_ enabled: Bool) {
-        menuBarIconEnabled = enabled
-        preferences.set(enabled, forKey: Self.menuBarIconKey)
-    }
 
     func setSoundsEnabled(_ enabled: Bool) {
         soundsEnabled = enabled

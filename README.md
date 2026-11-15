@@ -34,7 +34,6 @@ Hover the notch to see every Claude Code and Claude desktop session at a glance.
 | **Hover** | One card per session: state, what it is doing right now, a **cache countdown ring**, and **context-window usage** (`212k / 1M · 21%`). |
 | **Click a card** | Opens that session in the Claude desktop app. For terminal sessions it copies `claude --resume <id>` instead. |
 | **Servers** | A green `● :5173` chip on a card means that session left a server running. Click it, or open the **Servers** tab to see every one in one list, for **Stop** (asks once; offers **Force stop** if the server ignores the polite request). Only servers a session started are listed, never your own. |
-| **Menu bar icon** | A small sparkle in the menu bar shows what is happening (needs you, working, servers running) and has Pause and Quit. Turn it off in Settings. |
 | **Quiet mode** | Disappears completely while a full-screen app (a film, a presentation) is in front: no sound, no drop-downs, nothing drawn. Or pause alerts for an hour by hand. |
 | **Approvals** | Permission prompts appear as cards with the command, a risk flag for things like `rm -rf`, and **Deny / Allow** buttons. Several sessions can wait at once. |
 

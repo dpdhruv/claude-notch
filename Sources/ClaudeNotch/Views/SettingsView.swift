@@ -15,8 +15,6 @@ struct SettingsView: View {
                                  isOn: model.policy.quietWhenClaudeInFront) { model.setQuietWhenClaudeInFront($0) }
                 SettingSwitchRow(title: "Sounds", detail: "Play a sound for alerts and approvals",
                                  isOn: model.soundsEnabled) { model.setSoundsEnabled($0) }
-                SettingSwitchRow(title: "Menu bar icon", detail: "A sparkle with status, Pause and Quit",
-                                 isOn: model.menuBarIconEnabled) { model.setMenuBarIconEnabled($0) }
                 SettingButtonRow(title: model.isPaused ? "Alerts are paused" : "Pause alerts",
                                  detail: model.isPaused ? "No sounds or drop-downs right now" : "No sounds or drop-downs for an hour",
                                  action: model.isPaused ? "Resume" : "Pause 1h", tint: Palette.amber) {
