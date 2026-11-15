@@ -17,15 +17,6 @@ struct NotchRootView: View {
         }
         .frame(width: size.width, height: size.height)
         .clipShape(NotchShape(radius: radius))
-        .onContinuousHover { phase in
-            switch phase {
-            case .active(let point):
-                model.pointer = point
-                if !model.isHovering { model.pointerEntered() }
-            case .ended:
-                model.pointerExited()
-            }
-        }
         .frame(width: NotchGeometry.panelSize.width, height: NotchGeometry.panelSize.height, alignment: .top)
         .animation(Motion.resize, value: model.mode)
         .animation(Motion.resize, value: model.sessions.count)

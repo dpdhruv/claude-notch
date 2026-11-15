@@ -75,7 +75,7 @@ Other options: `--no-hooks` (skip editing settings.json; the notch still works, 
 
 ## Using it
 
-**Resting.** The sparkle on the left turns amber when something needs you. The right wing shows, in priority order: an amber number (sessions needing you), a countdown (a cache is close to expiring), the number of working sessions, or a green dot.
+**Resting.** Hover the notch itself to open the list. The wings beside it are display only: clicks go straight through them to the menu bar, and the window never blocks anything below the notch (browser tabs, toolbars…) except while the list or an approval is open. The sparkle on the left turns amber when something needs you. The right wing shows, in priority order: an amber number (sessions needing you), a countdown (a cache is close to expiring), the number of working sessions, or a green dot.
 
 **Alerts.** The notch drops down for a few seconds with a sound:
 

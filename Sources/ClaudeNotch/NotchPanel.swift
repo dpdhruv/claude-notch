@@ -15,7 +15,7 @@ final class NotchPanel: NSPanel {
         isMovable = false
         level = .mainMenu + 3
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
-        acceptsMouseMovedEvents = true
+        ignoresMouseEvents = true   // click-through until the pointer is on something clickable; see AppDelegate
     }
 }
 

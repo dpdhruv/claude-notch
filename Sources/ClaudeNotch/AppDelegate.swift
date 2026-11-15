@@ -40,16 +40,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model?.stop()
     }
 
-    /// SwiftUI hover callbacks are unreliable in a non-key panel, so while the list is open the pointer is read
-    /// directly. The model turns it into "which card is under the cursor".
+    /// The one place that watches the pointer (SwiftUI hover callbacks are unreliable in a non-key panel).
+    ///
+    /// Every tick it works out whether the pointer is on the notch and tells the model; and it keeps the window
+    /// click-through except while the pointer is on something clickable, so the large transparent panel never
+    /// swallows clicks meant for the app underneath (Chrome tabs, menu bar items…).
     private func trackPointer(on screen: NSScreen) {
         pointerTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
-            guard let model = self?.model, model.mode == .expanded else { return }
-            let mouse = NSEvent.mouseLocation
-            let size = model.size
-            let point = CGPoint(x: mouse.x - (screen.frame.midX - size.width / 2), y: screen.frame.maxY - mouse.y)
-            if let old = model.pointer, abs(old.x - point.x) < 0.5, abs(old.y - point.y) < 0.5 { return }
-            model.pointer = point
+            guard let self, let model = self.model, let panel = self.panel else { return }
+
+            let mouse = NSEvent.mouseLocation   // screen coordinates, origin bottom-left
+            let drawn = model.size
+            let zone = model.geometry.hotZone(for: model.mode, drawnSize: drawn)
+            let onNotch = abs(mouse.x - screen.frame.midX) <= zone.width / 2
+                && mouse.y <= screen.frame.maxY + 1 && mouse.y >= screen.frame.maxY - zone.height
+            let hovering = onNotch && model.presence != .hidden
+
+            if hovering != model.isHovering { hovering ? model.pointerEntered() : model.pointerExited() }
+            if hovering && model.mode == .expanded {
+                // Convert to the notch's own coordinates (origin top-left) for card hit-testing.
+                let point = CGPoint(x: mouse.x - (screen.frame.midX - drawn.width / 2), y: screen.frame.maxY - mouse.y)
+                if let old = model.pointer, abs(old.x - point.x) < 0.5, abs(old.y - point.y) < 0.5 {} else { model.pointer = point }
+            }
+            panel.ignoresMouseEvents = !(hovering && NotchGeometry.acceptsClicks(in: model.mode))
         }
     }
 

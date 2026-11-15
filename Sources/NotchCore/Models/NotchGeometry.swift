@@ -62,6 +62,19 @@ public struct NotchGeometry {
         }
     }
 
+    // MARK: Pointer interaction
+
+    /// The region that reacts to the pointer. While collapsed, only the physical notch (plus a hair) counts, so the
+    /// decorative wings never get in the way of the menu bar items underneath them.
+    public func hotZone(for mode: NotchMode, drawnSize: CGSize) -> CGSize {
+        mode == .collapsed ? CGSize(width: notchWidth + 16, height: notchHeight + 2) : drawnSize
+    }
+
+    /// Only the list and the approval cards have anything to click. In other modes the window lets every click through.
+    public static func acceptsClicks(in mode: NotchMode) -> Bool {
+        mode == .expanded || mode == .request
+    }
+
     // MARK: Hit testing
 
     /// Which session card a point (in the notch's own coordinates, origin top-left) falls on.

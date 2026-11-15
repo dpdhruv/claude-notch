@@ -93,3 +93,26 @@ final class PathsTests: XCTestCase {
         XCTAssertEqual(paths.heartbeat.path, "/data/alive")
     }
 }
+
+final class NotchInteractionTests: XCTestCase {
+    private let geometry = NotchGeometry(notchWidth: 190, notchHeight: 32)
+
+    func testCollapsedOnlyReactsOnThePhysicalNotchNotTheWings() {
+        let drawn = geometry.size(for: .collapsed, sessionCount: 1, requestCount: 0)
+        let zone = geometry.hotZone(for: .collapsed, drawnSize: drawn)
+        XCTAssertLessThan(zone.width, drawn.width, "wings must not intercept the menu bar")
+        XCTAssertGreaterThanOrEqual(zone.width, 190)
+    }
+
+    func testOtherModesReactAcrossWhatIsDrawn() {
+        let drawn = geometry.size(for: .expanded, sessionCount: 3, requestCount: 0)
+        XCTAssertEqual(geometry.hotZone(for: .expanded, drawnSize: drawn), drawn)
+    }
+
+    func testOnlyTheListAndApprovalsAcceptClicks() {
+        XCTAssertTrue(NotchGeometry.acceptsClicks(in: .expanded))
+        XCTAssertTrue(NotchGeometry.acceptsClicks(in: .request))
+        XCTAssertFalse(NotchGeometry.acceptsClicks(in: .collapsed))
+        XCTAssertFalse(NotchGeometry.acceptsClicks(in: .peek))
+    }
+}
