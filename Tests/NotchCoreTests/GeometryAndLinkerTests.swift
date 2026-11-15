@@ -17,9 +17,9 @@ final class NotchGeometryTests: XCTestCase {
     }
 
     func testRequestListIsCappedWithAnOverflowLine() {
-        let four = geometry.size(for: .request, sessionCount: 0, requestCount: 4)
-        let five = geometry.size(for: .request, sessionCount: 0, requestCount: 5)
-        XCTAssertEqual(five.height - four.height, NotchGeometry.requestOverflowHeight)
+        let full = geometry.size(for: .request, sessionCount: 0, requestCount: NotchGeometry.maxRequestRows)
+        let over = geometry.size(for: .request, sessionCount: 0, requestCount: NotchGeometry.maxRequestRows + 1)
+        XCTAssertEqual(over.height - full.height, NotchGeometry.requestOverflowHeight)
     }
 
     func testEveryModeFitsInsideThePanel() {
@@ -114,5 +114,45 @@ final class NotchInteractionTests: XCTestCase {
         XCTAssertTrue(NotchGeometry.acceptsClicks(in: .request))
         XCTAssertFalse(NotchGeometry.acceptsClicks(in: .collapsed))
         XCTAssertFalse(NotchGeometry.acceptsClicks(in: .peek))
+    }
+}
+
+final class RequestDetailTests: XCTestCase {
+    func testBashShowsTheCommandAndClaudesExplanation() {
+        let detail = ToolDescriber.detail(of: "Bash", input: ["command": "make test\nmake lint", "description": "Run checks"])
+        XCTAssertEqual(detail.headline, "Run shell command")
+        XCTAssertEqual(detail.explanation, "Run checks")
+        XCTAssertEqual(detail.lines.map(\.text), ["make test", "make lint"])
+    }
+
+    func testLongCommandsAreCappedWithAMoreLine() {
+        let command = (1...12).map { "step \($0)" }.joined(separator: "\n")
+        let lines = ToolDescriber.detail(of: "Bash", input: ["command": command]).lines
+        XCTAssertEqual(lines.count, ToolDescriber.maxDetailLines)
+        XCTAssertEqual(lines.last, .init(kind: .note, text: "+8 more lines"))
+    }
+
+    func testEditShowsRemovedThenAddedLines() {
+        let detail = ToolDescriber.detail(of: "Edit", input: ["file_path": "/a/b/Foo.swift", "old_string": "let x = 1", "new_string": "let x = 2"])
+        XCTAssertEqual(detail.headline, "Edit Foo.swift")
+        XCTAssertEqual(detail.lines, [.init(kind: .removed, text: "let x = 1"), .init(kind: .added, text: "let x = 2")])
+    }
+
+    func testWriteCountsLines() {
+        let detail = ToolDescriber.detail(of: "Write", input: ["file_path": "/a/new.txt", "content": "a\nb\nc"])
+        XCTAssertTrue(detail.explanation?.hasSuffix("3 lines") ?? false)
+        XCTAssertEqual(detail.lines.filter { $0.kind == .added }.count, 3)
+    }
+
+    func testUnknownToolsListTheirArguments() {
+        let detail = ToolDescriber.detail(of: "mcp__github__create_issue", input: ["title": "Bug", "repo": "x/y"])
+        XCTAssertEqual(detail.lines.map(\.text), ["repo: x/y", "title: Bug"])
+    }
+
+    func testApprovalCardHeightGrowsWithItsLines() {
+        let geometry = NotchGeometry(notchWidth: 190, notchHeight: 32)
+        let short = geometry.size(for: .request, sessionCount: 0, requestCount: 1, requestBodyLines: [1])
+        let tall = geometry.size(for: .request, sessionCount: 0, requestCount: 1, requestBodyLines: [5])
+        XCTAssertEqual(tall.height - short.height, 4 * NotchGeometry.requestLineHeight)
     }
 }

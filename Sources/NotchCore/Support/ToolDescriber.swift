@@ -28,6 +28,97 @@ public enum ToolDescriber {
         return String(json.prefix(300))
     }
 
+    /// How many lines of the command or change a card shows before it says "+N more".
+    public static let maxDetailLines = 5
+    private static let maxLineLength = 160
+
+    /// The request broken down for the approval card: what it does, why, and the exact command or change.
+    public static func detail(of tool: String, input: [String: Any]?) -> RequestDetail {
+        let input = input ?? [:]
+        func string(_ key: String) -> String? {
+            guard let value = input[key] as? String, !value.isEmpty else { return nil }
+            return value
+        }
+        func file() -> String { string("file_path").map { ($0 as NSString).lastPathComponent } ?? "file" }
+        func path() -> String? { string("file_path").map(abbreviatingHome) }
+
+        switch tool {
+        case "Bash":
+            return RequestDetail(headline: "Run shell command", explanation: string("description"),
+                                 lines: capped(plain: string("command") ?? ""))
+        case "Edit":
+            return RequestDetail(headline: "Edit \(file())", explanation: path(),
+                                 lines: capped(removed: string("old_string") ?? "", added: string("new_string") ?? ""))
+        case "MultiEdit":
+            let edits = input["edits"] as? [[String: Any]] ?? []
+            let first = edits.first
+            let count = edits.count
+            return RequestDetail(headline: "Edit \(file())" + (count > 1 ? " (\(count) changes)" : ""), explanation: path(),
+                                 lines: capped(removed: first?["old_string"] as? String ?? "", added: first?["new_string"] as? String ?? ""))
+        case "Write":
+            let content = string("content") ?? ""
+            let total = content.split(separator: "\n", omittingEmptySubsequences: false).count
+            return RequestDetail(headline: "Write \(file())", explanation: [path(), "\(total) line\(total == 1 ? "" : "s")"].compactMap { $0 }.joined(separator: " · "),
+                                 lines: capped(added: content))
+        case "NotebookEdit":
+            return RequestDetail(headline: "Edit notebook \(file())", explanation: (input["notebook_path"] as? String).map(abbreviatingHome),
+                                 lines: capped(added: string("new_source") ?? ""))
+        case "Read":
+            return RequestDetail(headline: "Read \(file())", explanation: path(), lines: [])
+        case "WebFetch":
+            return RequestDetail(headline: "Fetch a web page", explanation: string("prompt"), lines: capped(plain: string("url") ?? ""))
+        case "WebSearch":
+            return RequestDetail(headline: "Search the web", lines: capped(plain: string("query") ?? ""))
+        case "Grep", "Glob":
+            return RequestDetail(headline: tool == "Grep" ? "Search file contents" : "Find files", explanation: string("path").map(abbreviatingHome),
+                                 lines: capped(plain: string("pattern") ?? ""))
+        default:
+            let arguments = input.keys.sorted().map { key -> String in
+                let value = input[key]
+                let text = (value as? String) ?? (value.flatMap { try? JSONSerialization.data(withJSONObject: $0, options: [.fragmentsAllowed]) }.map { String(decoding: $0, as: UTF8.self) } ?? "")
+                return "\(key): \(text)"
+            }
+            return RequestDetail(headline: "Use \(displayName(of: tool))", lines: capped(plain: arguments.joined(separator: "\n")))
+        }
+    }
+
+    static func abbreviatingHome(_ path: String) -> String {
+        let home = NSHomeDirectory()
+        return path.hasPrefix(home) ? "~" + path.dropFirst(home.count) : path
+    }
+
+    private static func clip(_ line: Substring) -> String {
+        line.count > maxLineLength ? String(line.prefix(maxLineLength)) + "…" : String(line)
+    }
+
+    private static func capped(plain text: String) -> [RequestDetail.Line] {
+        cap(text.split(separator: "\n", omittingEmptySubsequences: false).map { .init(kind: .plain, text: clip($0)) })
+    }
+
+    private static func capped(added: String) -> [RequestDetail.Line] {
+        cap(added.split(separator: "\n", omittingEmptySubsequences: false).map { .init(kind: .added, text: clip($0)) })
+    }
+
+    /// A removed block followed by an added one, sharing the line budget so both stay visible.
+    private static func capped(removed: String, added: String) -> [RequestDetail.Line] {
+        let old = removed.isEmpty ? [] : removed.split(separator: "\n", omittingEmptySubsequences: false)
+        let new = added.isEmpty ? [] : added.split(separator: "\n", omittingEmptySubsequences: false)
+        let budget = maxDetailLines
+        let oldShown = new.isEmpty ? min(old.count, budget) : min(old.count, max(1, budget / 2))
+        let newShown = min(new.count, budget - oldShown)
+        var lines = old.prefix(oldShown).map { RequestDetail.Line(kind: .removed, text: clip($0)) }
+        lines += new.prefix(newShown).map { RequestDetail.Line(kind: .added, text: clip($0)) }
+        let hidden = (old.count - oldShown) + (new.count - newShown)
+        if hidden > 0 { lines.append(.init(kind: .note, text: "+\(hidden) more line\(hidden == 1 ? "" : "s")")) }
+        return lines
+    }
+
+    private static func cap(_ lines: [RequestDetail.Line]) -> [RequestDetail.Line] {
+        guard lines.count > maxDetailLines else { return lines }
+        let hidden = lines.count - (maxDetailLines - 1)
+        return Array(lines.prefix(maxDetailLines - 1)) + [.init(kind: .note, text: "+\(hidden) more lines")]
+    }
+
     public static func displayName(of tool: String) -> String {
         tool.replacingOccurrences(of: "mcp__", with: "")
     }

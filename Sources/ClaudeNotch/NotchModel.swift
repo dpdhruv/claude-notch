@@ -106,7 +106,8 @@ final class NotchModel: ObservableObject {
 
     var sessions: [ClaudeSession] { Array(monitor.sessions.prefix(NotchGeometry.maxSessionRows)) }
     var requests: [PermissionRequest] { broker.pending }
-    var size: CGSize { geometry.size(for: mode, sessionCount: sessions.count, requestCount: requests.count) }
+    var size: CGSize { geometry.size(for: mode, sessionCount: sessions.count, requestCount: requests.count,
+                                               requestBodyLines: requests.map { $0.detail.lines.count }) }
 
     var needsYouCount: Int { max(requests.count, monitor.sessions.filter { $0.state == .needsYou }.count) }
     var workingCount: Int { monitor.sessions.filter { $0.state == .working }.count }

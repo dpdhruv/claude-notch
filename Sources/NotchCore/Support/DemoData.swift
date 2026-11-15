@@ -28,9 +28,13 @@ public enum DemoData {
     public static func approvals(now: Date) -> [PermissionRequest] {
         [
             PermissionRequest(id: "r1", sessionID: "demo-ci", toolName: "Bash",
-                              summary: "npm test -- --runInBand --coverage", raisedAt: now.addingTimeInterval(-18)),
+                              summary: "npm test -- --runInBand --coverage",
+                              detail: ToolDescriber.detail(of: "Bash", input: ["command": "npm test -- --runInBand --coverage", "description": "Run the test suite"]),
+                              directory: "~/code/ci-pipeline", raisedAt: now.addingTimeInterval(-18)),
             PermissionRequest(id: "r2", sessionID: "demo-checkout", toolName: "Bash",
-                              summary: "rm -rf dist .next && npm run build", raisedAt: now.addingTimeInterval(-6)),
+                              summary: "rm -rf dist .next && npm run build",
+                              detail: ToolDescriber.detail(of: "Bash", input: ["command": "rm -rf dist .next && npm run build", "description": "Clean and rebuild"]),
+                              directory: "~/code/checkout", raisedAt: now.addingTimeInterval(-6)),
         ]
     }
 }

@@ -48,22 +48,28 @@ struct RequestRow: View {
         let risk = ToolDescriber.risk(tool: request.toolName, summary: request.summary)
         let accent = risk != nil ? Palette.coral : Palette.amber
 
-        HStack(spacing: 12) {
+        HStack(alignment: .top, spacing: 12) {
             handoffRing(accent: accent)
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(info.title)
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
-                    Pill(text: ToolDescriber.displayName(of: request.toolName), tint: Palette.amber)
                     if let risk { Pill(text: risk, tint: Palette.coral) }
+                    Spacer(minLength: 4)
+                    if let directory = request.directory {
+                        Text(directory)
+                            .font(.system(size: 9.5))
+                            .foregroundStyle(.white.opacity(0.35))
+                            .lineLimit(1)
+                            .truncationMode(.head)
+                            .frame(maxWidth: 120, alignment: .trailing)
+                    }
                 }
-                Text(request.summary.replacingOccurrences(of: "\n", with: " ⏎ "))
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                headline(request.detail)
+                if !request.detail.lines.isEmpty { codeBox(request.detail.lines, accent: accent) }
+                Spacer(minLength: 0)
                 actions
             }
         }
@@ -72,7 +78,65 @@ struct RequestRow: View {
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(accent.opacity(0.6), lineWidth: 1))
         .contentShape(RoundedRectangle(cornerRadius: 14))
         .onTapGesture { model.open(sessionID: request.sessionID, title: info.title) }
-        .frame(height: NotchGeometry.requestRowHeight)
+        .frame(height: NotchGeometry.requestRowHeight(bodyLines: request.detail.lines.count))
+    }
+
+    /// What is about to happen, followed by Claude's own explanation when it gave one.
+    private func headline(_ detail: RequestDetail) -> some View {
+        HStack(spacing: 6) {
+            Text(detail.headline)
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundStyle(Palette.amber)
+                .lineLimit(1)
+                .layoutPriority(1)
+            if let explanation = detail.explanation {
+                Text(explanation)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        }
+    }
+
+    /// The exact command or change, with removed and added lines coloured like a diff.
+    private func codeBox(_ lines: [RequestDetail.Line], accent: Color) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                HStack(spacing: 5) {
+                    Text(marker(for: line.kind))
+                        .frame(width: 8, alignment: .leading)
+                    Text(line.text.isEmpty ? " " : line.text)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                .font(.system(size: 10.5, design: line.kind == .note ? .default : .monospaced))
+                .foregroundStyle(color(for: line.kind))
+                .frame(height: NotchGeometry.requestLineHeight, alignment: .leading)
+            }
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 5)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 7).fill(.black.opacity(0.45)))
+    }
+
+    private func marker(for kind: RequestDetail.Line.Kind) -> String {
+        switch kind {
+        case .added: return "+"
+        case .removed: return "−"
+        case .plain: return "›"
+        case .note: return ""
+        }
+    }
+
+    private func color(for kind: RequestDetail.Line.Kind) -> Color {
+        switch kind {
+        case .added: return Palette.mint
+        case .removed: return Palette.coral
+        case .plain: return .white.opacity(0.85)
+        case .note: return .white.opacity(0.4)
+        }
     }
 
     /// Drains over the time left before the request is handed back to Claude's own dialog.

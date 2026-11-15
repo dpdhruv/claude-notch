@@ -24,7 +24,7 @@ public struct NotchGeometry {
     // MARK: Constants
 
     /// The transparent window all modes are drawn inside; large enough for the tallest mode.
-    public static let panelSize = CGSize(width: 460, height: 520)
+    public static let panelSize = CGSize(width: 460, height: 640)
     public static let listWidth: CGFloat = 440
     public static let wingWidth: CGFloat = 74
     public static let listInset: CGFloat = 12
@@ -34,9 +34,13 @@ public struct NotchGeometry {
     public static var sessionRowPitch: CGFloat { sessionRowHeight + rowSpacing }
     public static let maxSessionRows = 6
 
-    public static let requestRowHeight: CGFloat = 78
-    public static var requestRowPitch: CGFloat { requestRowHeight + rowSpacing }
-    public static let maxRequestRows = 4
+    /// An approval card: header, headline and buttons around a code box that grows with the lines it shows.
+    public static let requestChromeHeight: CGFloat = 96
+    public static let requestLineHeight: CGFloat = 14
+    public static let maxRequestRows = 3
+    public static func requestRowHeight(bodyLines: Int) -> CGFloat {
+        requestChromeHeight + CGFloat(max(0, bodyLines)) * requestLineHeight
+    }
     public static let requestOverflowHeight: CGFloat = 22
 
     public static let peekHeight: CGFloat = 46
@@ -45,7 +49,8 @@ public struct NotchGeometry {
 
     // MARK: Sizes
 
-    public func size(for mode: NotchMode, sessionCount: Int, requestCount: Int) -> CGSize {
+    /// `requestBodyLines` holds how many code lines each waiting approval shows, oldest first.
+    public func size(for mode: NotchMode, sessionCount: Int, requestCount: Int, requestBodyLines: [Int] = []) -> CGSize {
         let collapsedWidth = notchWidth + Self.wingWidth * 2
         switch mode {
         case .collapsed:
@@ -56,9 +61,12 @@ public struct NotchGeometry {
             let rows = CGFloat(max(1, min(sessionCount, Self.maxSessionRows)))
             return CGSize(width: Self.listWidth, height: notchHeight + rows * Self.sessionRowPitch + Self.bottomPadding)
         case .request:
-            let rows = CGFloat(min(requestCount, Self.maxRequestRows))
+            let shown = min(requestCount, Self.maxRequestRows)
+            let rows = (0..<shown).reduce(CGFloat(0)) { total, index in
+                total + Self.requestRowHeight(bodyLines: index < requestBodyLines.count ? requestBodyLines[index] : 1) + Self.rowSpacing
+            }
             let overflow = requestCount > Self.maxRequestRows ? Self.requestOverflowHeight : 0
-            return CGSize(width: Self.listWidth, height: notchHeight + rows * Self.requestRowPitch + Self.bottomPadding + overflow)
+            return CGSize(width: Self.listWidth, height: notchHeight + rows + Self.bottomPadding + overflow)
         }
     }
 

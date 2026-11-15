@@ -85,6 +85,8 @@ public final class PermissionBroker: ObservableObject {
                 sessionID: payload["session_id"] as? String ?? "",
                 toolName: tool,
                 summary: ToolDescriber.summary(of: tool, input: payload["tool_input"] as? [String: Any]),
+                detail: ToolDescriber.detail(of: tool, input: payload["tool_input"] as? [String: Any]),
+                directory: (payload["cwd"] as? String).map(ToolDescriber.abbreviatingHome),
                 raisedAt: Date(timeIntervalSince1970: json["ts"] as? Double ?? 0)))
         }
         found.sort { $0.raisedAt < $1.raisedAt }
