@@ -87,6 +87,7 @@ enum CommandLineTool {
           Transcripts        \(fm.fileExists(atPath: paths.transcripts.path) ? "found" : "NOT FOUND") (\(sessions.count) recent session\(sessions.count == 1 ? "" : "s"))
           Hooks              \(events.isEmpty ? "not installed (run: ClaudeNotch install-hooks)" : "installed for \(events.joined(separator: ", "))")
           Servers            \(servers.isEmpty ? "none from sessions" : servers.map { ":\($0.port) \($0.name)" }.joined(separator: ", "))
+          Shortcuts          \((try? String(contentsOf: paths.shortcutStatus, encoding: .utf8)) ?? "unknown (app not running)")  [⌥⌘Y allow, ⌥⌘N deny]
           App                \(heartbeatAge.map { $0 < 6 ? "running" : "not running" } ?? "not running")
           Data directory     \(paths.notchDir.path)
         """)

@@ -52,6 +52,7 @@ final class NotchModel: ObservableObject {
         self.isFullScreenAppActive = isFullScreenAppActive
         self.frontmostBundleID = frontmostBundleID
         self.soundsEnabled = preferences.object(forKey: Self.soundsKey) as? Bool ?? true
+        self.shortcutsEnabled = preferences.object(forKey: Self.shortcutsKey) as? Bool ?? true
         self.policy = QuietPolicy(quietInFullScreen: preferences.object(forKey: Self.quietInFullScreenKey) as? Bool ?? true,
                                   quietWhenClaudeInFront: preferences.object(forKey: Self.quietWhenClaudeInFrontKey) as? Bool ?? true)
     }
@@ -86,6 +87,7 @@ final class NotchModel: ObservableObject {
 
     private static let quietInFullScreenKey = "quietInFullScreen"
     private static let soundsKey = "soundsEnabled"
+    private static let shortcutsKey = "shortcutsEnabled"
 
     @Published private(set) var soundsEnabled = true
 
@@ -221,6 +223,39 @@ final class NotchModel: ObservableObject {
 
     func answer(_ request: PermissionRequest, _ decision: PermissionDecision) {
         broker.respond(to: request, with: decision)
+    }
+
+    // MARK: Keyboard shortcuts
+
+    @Published private(set) var shortcutsEnabled = true
+    /// Another app already owns one of the shortcut keys.
+    @Published private(set) var shortcutsConflict = false
+
+    func shortcutsRegistered(_ accepted: Int, of total: Int) {
+        shortcutsConflict = accepted < total
+    }
+    private var lastShortcutAnswer: Date?
+
+    func setShortcutsEnabled(_ enabled: Bool) {
+        shortcutsEnabled = enabled
+        preferences.set(enabled, forKey: Self.shortcutsKey)
+    }
+
+    /// Allow or Deny from the keyboard. With the cards held back, the first press only shows them.
+    func answerFromKeyboard(_ decision: PermissionDecision) {
+        let now = Date()
+        switch ApprovalShortcut.action(requestsWaiting: !requests.isEmpty, cardsShowing: mode == .request,
+                                       hidden: presence == .hidden, lastAnswer: lastShortcutAnswer, now: now) {
+        case .ignore:
+            return
+        case .reveal:
+            pendingCollapse?.cancel()
+            withAnimation(Motion.alert) { mode = .request }
+        case .answer:
+            guard let first = requests.first else { return }
+            lastShortcutAnswer = now
+            answer(first, decision)
+        }
     }
 
     /// Opens a session in the Claude desktop app; for terminal sessions, copies the resume command instead.

@@ -34,6 +34,7 @@ Hover the notch to see every Claude Code and Claude desktop session at a glance.
 | **Hover** | One card per session: state, what it is doing right now, a **cache countdown ring**, and **context-window usage** (`212k / 1M · 21%`). |
 | **Click a card** | Opens that session in the Claude desktop app. For terminal sessions it copies `claude --resume <id>` instead. |
 | **Servers** | A green `● :5173` chip on a card means that session left a server running. Click it, or open the **Servers** tab to see every one in one list, for **Stop** (asks once; offers **Force stop** if the server ignores the polite request). Only servers a session started are listed, never your own. |
+| **Keyboard shortcuts** | **⌥⌘Y** allows and **⌥⌘N** denies the oldest waiting approval, from any app. |
 | **Quiet mode** | Disappears completely while a full-screen app (a film, a presentation) is in front: no sound, no drop-downs, nothing drawn. Or pause alerts for an hour by hand. |
 | **Approvals** | Permission prompts appear as cards with the command, a risk flag for things like `rm -rf`, and **Deny / Allow** buttons. Several sessions can wait at once. |
 
@@ -104,6 +105,8 @@ Each card has:
 - the **context bar**: tokens used out of the model's window.
 
 Use the Settings tab for the options, or right-click the list for Pause and Quit.
+
+**Keyboard shortcuts.** With approvals showing, **⌥⌘Y** allows and **⌥⌘N** denies the oldest waiting request, from any app. Two safeguards: if the cards are being held back (Claude is in front), the first press only shows them, so you never approve something unseen; and a second answer within a second of the first is ignored, so a double-press can't answer the next card before you have read it. They use the system's standard hot key API, which needs no extra permission and never sees other keystrokes. Switch them off in Settings; if another app already owns one of the keys, Settings says so and `ClaudeNotch status` reports it.
 
 **Approvals.** When Claude asks to run a tool, the notch shows the request. Allow and Deny answer Claude directly. "Ask in app" hands the prompt back to Claude's own dialog, and so does doing nothing for about 110 seconds, closing the notch app, or answering in Claude first. Questions and plan approvals are never intercepted: they need Claude's full interface.
 

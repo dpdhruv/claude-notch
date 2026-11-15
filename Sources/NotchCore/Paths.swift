@@ -44,6 +44,8 @@ public struct Paths {
     /// Touched regularly while the app runs; the permission hook only intercepts prompts while it is fresh.
     /// Held for as long as the app runs, so a second copy knows to quit.
     public var instanceLock: URL { notchDir.appendingPathComponent("app.lock") }
+    /// Written by the app: whether the keyboard shortcuts registered.
+    public var shortcutStatus: URL { notchDir.appendingPathComponent("shortcuts") }
     public var heartbeat: URL { notchDir.appendingPathComponent("alive") }
     public var installedBinary: URL { notchDir.appendingPathComponent("bin/ClaudeNotch") }
 }

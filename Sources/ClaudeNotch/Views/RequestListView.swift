@@ -13,7 +13,7 @@ struct RequestListView: View {
             header(count: requests.count)
             VStack(spacing: NotchGeometry.rowSpacing) {
                 ForEach(requests.prefix(NotchGeometry.maxRequestRows)) { request in
-                    RequestRow(request: request, model: model)
+                    RequestRow(request: request, model: model, showsShortcutHint: model.shortcutsEnabled && request.id == requests.first?.id)
                         .transition(.asymmetric(insertion: .scale(scale: 0.95).combined(with: .opacity),
                                                 removal: .move(edge: .trailing).combined(with: .opacity)))
                 }
@@ -40,6 +40,7 @@ struct RequestListView: View {
 struct RequestRow: View {
     let request: PermissionRequest
     @ObservedObject var model: NotchModel
+    var showsShortcutHint = false
     @State private var hoveringAllow = false
     @State private var hoveringDeny = false
 
@@ -155,6 +156,12 @@ struct RequestRow: View {
             }
             .buttonStyle(.plain)
             Spacer(minLength: 0)
+            if showsShortcutHint {
+                Text("⌥⌘N  ⌥⌘Y")
+                    .font(.system(size: 9.5, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.3))
+                    .help("Keyboard: ⌥⌘N denies, ⌥⌘Y allows")
+            }
             Button { model.answer(request, .deny) } label: {
                 Text("Deny")
                     .font(.system(size: 11, weight: .semibold))

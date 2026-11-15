@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import Carbon.HIToolbox
 import NotchCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -8,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var model: NotchModel?
     private var pointerTimer: Timer?
     private var presenceObserver: AnyCancellable?
+    private let hotKeys = GlobalHotKeys()
+    private var shortcutsObserver: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let screen = Self.notchScreen()
@@ -32,6 +35,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             panel?.ignoresMouseEvents = presence == .hidden
         }
 
+        // ⌥⌘N denies and ⌥⌘Y allows the oldest waiting approval (see ApprovalShortcut for the safeguards).
+        shortcutsObserver = model.$shortcutsEnabled.receive(on: DispatchQueue.main).sink { [weak self, weak model] enabled in
+            guard enabled, let model else {
+                self?.hotKeys.unregister()
+                model?.shortcutsRegistered(2, of: 2)
+                Self.recordShortcutStatus("off")
+                return
+            }
+            let modifiers = optionKey | cmdKey
+            let accepted = self?.hotKeys.register([
+                .init(keyCode: kVK_ANSI_N, modifiers: modifiers) { model.answerFromKeyboard(.deny) },
+                .init(keyCode: kVK_ANSI_Y, modifiers: modifiers) { model.answerFromKeyboard(.allow) },
+            ]) ?? 0
+            model.shortcutsRegistered(accepted, of: 2)
+            Self.recordShortcutStatus(accepted == 2 ? "active" : "conflict (\(accepted) of 2 keys registered)")
+        }
         model.start()
         if ProcessInfo.processInfo.environment["CLAUDE_NOTCH_EXPANDED"] != nil { model.forceExpanded() }
         trackPointer(on: screen)
@@ -65,6 +84,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             panel.ignoresMouseEvents = !(hovering && NotchGeometry.acceptsClicks(in: model.mode))
         }
+    }
+
+    /// So `ClaudeNotch status` can say whether the shortcuts took (another app may own the keys).
+    private static func recordShortcutStatus(_ text: String) {
+        try? text.write(to: Paths.live.shortcutStatus, atomically: true, encoding: .utf8)
     }
 
     // MARK: Screen
