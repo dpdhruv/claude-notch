@@ -95,7 +95,7 @@ Alerts are skipped while your pointer is on the notch, and while quiet mode is a
 - the **state** label and what the session is doing (`Bash: swift build`, `Waiting to run …`, or its last words).
 - the **context bar**: tokens used out of the model's window.
 
-Right-click the list to quit.
+Click the gear in the list for settings, or right-click it for Pause and Quit.
 
 **Approvals.** When Claude asks to run a tool, the notch shows the request. Allow and Deny answer Claude directly. "Ask in app" hands the prompt back to Claude's own dialog, and so does doing nothing for about 110 seconds, closing the notch app, or answering in Claude first. Questions and plan approvals are never intercepted: they need Claude's full interface.
 
