@@ -89,7 +89,8 @@ public final class PermissionBroker: ObservableObject {
                 directory: (payload["cwd"] as? String).map(ToolDescriber.abbreviatingHome),
                 raisedAt: Date(timeIntervalSince1970: json["ts"] as? Double ?? 0)))
         }
-        found.sort { $0.raisedAt < $1.raisedAt }
+        // Oldest first; requests raised in the same second keep a stable order, so the keyboard shortcut and the top card agree.
+        found.sort { ($0.raisedAt, $0.id) < ($1.raisedAt, $1.id) }
         if found != pending { pending = found }
     }
 }
