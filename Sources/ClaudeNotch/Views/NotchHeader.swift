@@ -7,8 +7,6 @@ struct NotchHeader: View {
     let iconTint: Color
     let status: String
     let statusTint: Color
-    /// When set, a gear button appears next to the name.
-    var onSettings: (() -> Void)?
 
     var body: some View {
         HStack {
@@ -17,17 +15,6 @@ struct NotchHeader: View {
                 Text("Claude").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
             }
             .padding(.leading, 22)
-            if let onSettings {
-                Button(action: onSettings) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .frame(width: 24, height: 24)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help("Settings")
-            }
             Spacer()
             Text(status)
                 .font(.system(size: 11, weight: .medium))

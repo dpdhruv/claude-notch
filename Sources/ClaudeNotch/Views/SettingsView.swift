@@ -1,7 +1,7 @@
 import SwiftUI
 import NotchCore
 
-/// The settings page, drawn inside the notch: a back arrow, a few switches, pause and quit.
+/// The settings page, drawn inside the notch: a few switches, pause and quit.
 struct SettingsView: View {
     @ObservedObject var model: NotchModel
 
@@ -30,21 +30,7 @@ struct SettingsView: View {
     }
 
     private var header: some View {
-        HStack {
-            Button { model.hideSettings() } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "chevron.left").font(.system(size: 11, weight: .bold))
-                    Text("Settings").font(.system(size: 12, weight: .semibold))
-                }
-                .foregroundStyle(.white)
-                .padding(.vertical, 6)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, 22)
-            Spacer()
-        }
-        .frame(height: model.geometry.notchHeight)
+        NotchHeader(height: model.geometry.notchHeight, iconTint: Palette.claude, status: "Settings", statusTint: .white.opacity(0.55))
     }
 }
 

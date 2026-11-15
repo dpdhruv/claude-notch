@@ -95,7 +95,7 @@ Alerts are skipped while your pointer is on the notch, and while quiet mode is a
 - the **state** label and what the session is doing (`Bash: swift build`, `Waiting to run …`, or its last words).
 - the **context bar**: tokens used out of the model's window.
 
-Click the gear in the list for settings, or right-click it for Pause and Quit.
+Use the Settings tab for the options, or right-click the list for Pause and Quit.
 
 **Approvals.** When Claude asks to run a tool, the notch shows the request. Allow and Deny answer Claude directly. "Ask in app" hands the prompt back to Claude's own dialog, and so does doing nothing for about 110 seconds, closing the notch app, or answering in Claude first. Questions and plan approvals are never intercepted: they need Claude's full interface.
 
@@ -105,7 +105,7 @@ Allow does not override your deny rules or Claude's other safeguards. It answers
 
 **When Claude is already in front.** If the Claude desktop app (or a terminal) is the app you're using, approval cards don't drop down and make no sound: Claude is showing its own prompt right there. The notch shows its amber badge instead, hovering it opens the cards, and switching to another app drops them down. They are held back rather than handed back to Claude, because the session that is asking may not be the one on your screen. Turn it off with *Quiet when Claude is in front* in the notch settings.
 
-Click the **gear** in the session list to open the settings inside the notch (the back arrow returns to the list):
+Use the **Settings** tab along the bottom of the notch (and **Sessions** to go back):
 
 - **Quiet in full screen** (on by default). While a full-screen app is in front, the notch draws nothing, plays no sounds and lets every click through. When you leave full screen it returns, and any approval still waiting is shown.
 - **Sounds** can be switched off entirely.

@@ -51,6 +51,8 @@ public struct NotchGeometry {
     public static let peekHeight: CGFloat = 46
     public static let peekMinWidth: CGFloat = 400
     private static let bottomPadding: CGFloat = 20
+    /// The Sessions / Settings tabs along the bottom of the list and the settings page.
+    public static let tabBarHeight: CGFloat = 40
 
     // MARK: Sizes
 
@@ -64,10 +66,10 @@ public struct NotchGeometry {
             return CGSize(width: max(collapsedWidth, Self.peekMinWidth), height: notchHeight + Self.peekHeight)
         case .expanded:
             let rows = CGFloat(max(1, min(sessionCount, Self.maxSessionRows)))
-            return CGSize(width: Self.listWidth, height: notchHeight + rows * Self.sessionRowPitch + Self.bottomPadding)
+            return CGSize(width: Self.listWidth, height: notchHeight + rows * Self.sessionRowPitch + Self.tabBarHeight)
         case .settings:
             let rows = CGFloat(Self.settingsRowCount)
-            return CGSize(width: Self.listWidth, height: notchHeight + rows * (Self.settingsRowHeight + Self.rowSpacing) + Self.bottomPadding)
+            return CGSize(width: Self.listWidth, height: notchHeight + rows * (Self.settingsRowHeight + Self.rowSpacing) + Self.tabBarHeight)
         case .request:
             let shown = min(requestCount, Self.maxRequestRows)
             let rows = (0..<shown).reduce(CGFloat(0)) { total, index in

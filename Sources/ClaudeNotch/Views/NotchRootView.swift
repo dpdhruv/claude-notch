@@ -26,9 +26,9 @@ struct NotchRootView: View {
         switch model.mode {
         case .collapsed: CollapsedBar(model: model)
         case .peek: AlertBar(model: model)
-        case .expanded: SessionListView(model: model)
+        case .expanded: TabbedPage(model: model) { SessionListView(model: model) }
         case .request: RequestListView(model: model)
-        case .settings: SettingsView(model: model)
+        case .settings: TabbedPage(model: model) { SettingsView(model: model) }
         }
     }
 }
@@ -51,5 +51,38 @@ struct NotchShape: Shape {
         path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY - radius), control: CGPoint(x: rect.minX, y: rect.maxY))
         path.closeSubpath()
         return path
+    }
+}
+
+/// A page with the Sessions / Settings tabs along the bottom.
+struct TabbedPage<Content: View>: View {
+    @ObservedObject var model: NotchModel
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            content.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            HStack(spacing: 6) {
+                tab("Sessions", icon: "square.stack.fill", selected: model.mode == .expanded) { model.hideSettings() }
+                tab("Settings", icon: "gearshape.fill", selected: model.mode == .settings) { model.showSettings() }
+            }
+            .padding(.horizontal, NotchGeometry.listInset)
+            .frame(height: NotchGeometry.tabBarHeight, alignment: .top)
+        }
+    }
+
+    private func tab(_ title: String, icon: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Image(systemName: icon).font(.system(size: 10, weight: .semibold))
+                Text(title).font(.system(size: 11, weight: .semibold))
+            }
+            .foregroundStyle(selected ? Color.white : .white.opacity(0.4))
+            .frame(maxWidth: .infinity)
+            .frame(height: 26)
+            .background(Capsule().fill(.white.opacity(selected ? 0.14 : 0)))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }

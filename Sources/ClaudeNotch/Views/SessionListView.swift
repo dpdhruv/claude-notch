@@ -47,8 +47,7 @@ struct SessionListView: View {
     }
 
     private var header: some View {
-        NotchHeader(height: model.geometry.notchHeight, iconTint: Palette.claude, status: summary, statusTint: .white.opacity(0.55),
-                    onSettings: { model.showSettings() })
+        NotchHeader(height: model.geometry.notchHeight, iconTint: Palette.claude, status: summary, statusTint: .white.opacity(0.55))
     }
 
     private var summary: String {
