@@ -64,12 +64,8 @@ public struct NotchGeometry {
             return CGSize(width: collapsedWidth, height: notchHeight)
         case .peek:
             return CGSize(width: max(collapsedWidth, Self.peekMinWidth), height: notchHeight + Self.peekHeight)
-        case .expanded:
-            let rows = CGFloat(max(1, min(sessionCount, Self.maxSessionRows)))
-            return CGSize(width: Self.listWidth, height: notchHeight + rows * Self.sessionRowPitch + Self.tabBarHeight)
-        case .settings:
-            let rows = CGFloat(Self.settingsRowCount)
-            return CGSize(width: Self.listWidth, height: notchHeight + rows * (Self.settingsRowHeight + Self.rowSpacing) + Self.tabBarHeight)
+        case .expanded, .settings:
+            return CGSize(width: Self.listWidth, height: tabbedHeight(sessionCount: sessionCount))
         case .request:
             let shown = min(requestCount, Self.maxRequestRows)
             let rows = (0..<shown).reduce(CGFloat(0)) { total, index in
@@ -78,6 +74,15 @@ public struct NotchGeometry {
             let overflow = requestCount > Self.maxRequestRows ? Self.requestOverflowHeight : 0
             return CGSize(width: Self.listWidth, height: notchHeight + rows + Self.bottomPadding + overflow)
         }
+    }
+
+    /// Sessions and Settings share one height, so switching tabs never moves the tab bar out from under the pointer
+    /// (which would count as leaving the notch and close it).
+    private func tabbedHeight(sessionCount: Int) -> CGFloat {
+        let listRows = CGFloat(max(1, min(sessionCount, Self.maxSessionRows)))
+        let list = listRows * Self.sessionRowPitch
+        let settings = CGFloat(Self.settingsRowCount) * (Self.settingsRowHeight + Self.rowSpacing)
+        return notchHeight + max(list, settings) + Self.tabBarHeight
     }
 
     // MARK: Pointer interaction

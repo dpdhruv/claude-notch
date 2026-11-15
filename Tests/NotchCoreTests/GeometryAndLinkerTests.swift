@@ -10,10 +10,18 @@ final class NotchGeometryTests: XCTestCase {
     }
 
     func testListHeightGrowsPerSessionAndIsCapped() {
-        let three = geometry.size(for: .expanded, sessionCount: 3, requestCount: 0)
-        XCTAssertEqual(three.height, 32 + 3 * 74 + NotchGeometry.tabBarHeight)
+        let settings = CGFloat(NotchGeometry.settingsRowCount) * (NotchGeometry.settingsRowHeight + NotchGeometry.rowSpacing)
+        XCTAssertEqual(geometry.size(for: .expanded, sessionCount: 5, requestCount: 0).height, 32 + 5 * 74 + NotchGeometry.tabBarHeight)
         XCTAssertEqual(geometry.size(for: .expanded, sessionCount: 50, requestCount: 0).height, 32 + 6 * 74 + NotchGeometry.tabBarHeight)
-        XCTAssertEqual(geometry.size(for: .expanded, sessionCount: 0, requestCount: 0).height, 32 + 74 + NotchGeometry.tabBarHeight, "room for the empty message")
+        XCTAssertEqual(geometry.size(for: .expanded, sessionCount: 0, requestCount: 0).height, 32 + settings + NotchGeometry.tabBarHeight,
+                       "never shorter than the settings page")
+    }
+
+    func testSessionsAndSettingsAreTheSameSizeSoTheTabBarStaysUnderThePointer() {
+        for count in 0...8 {
+            XCTAssertEqual(geometry.size(for: .expanded, sessionCount: count, requestCount: 0),
+                           geometry.size(for: .settings, sessionCount: count, requestCount: 0), "\(count) sessions")
+        }
     }
 
     func testRequestListIsCappedWithAnOverflowLine() {

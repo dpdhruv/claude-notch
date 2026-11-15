@@ -37,7 +37,7 @@ enum ScreenshotRenderer {
             ("alert.png", model(mode: .peek, alert: alert), 150),
             ("session-list.png", model(mode: .expanded, pointer: hoverSecondCard), 470),
             ("stop-server.png", model(mode: .expanded, serverMenu: "demo-checkout"), 470),
-            ("settings.png", model(mode: .settings), 350),
+            ("settings.png", model(mode: .settings), 470),
             ("approvals.png", model(mode: .request, requests: approvals), 270),
         ]
         for scene in scenes {
