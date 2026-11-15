@@ -89,7 +89,15 @@ Other options: `--no-hooks` (skip editing settings.json; the notch still works, 
 
 Alerts are skipped while your pointer is on the notch, and while quiet mode is active (below).
 
-**The list.** Sessions are sorted: needs you, working, done, idle. Each card has:
+**The list.** It shows Claude Code sessions, both terminal and Claude desktop ones, found in the conversation files under `~/.claude/projects`:
+
+- A session is listed if its conversation was active in the **last 12 hours**. Idle and finished sessions stay until then; older ones drop off.
+- At most **6 cards** fit. If more qualify, the most urgent 6 are shown and the rest are left out, but the numbers on the resting wing still count every session.
+- Sorted: needs you, working, done, idle, then most recent first within each group.
+- Sub-agents that Claude starts inside a conversation are not listed on their own.
+- Both numbers are in [`Config.swift`](Sources/NotchCore/Config.swift) (`sessionWindow`) and [`NotchGeometry.swift`](Sources/NotchCore/Models/NotchGeometry.swift) (`maxSessionRows`).
+
+Each card has:
 
 - the **ring**: time left on the prompt cache. Green is fresh, amber is half gone, red is nearly out, a snowflake means cold. While a session works it shows animated dots.
 - the **state** label and what the session is doing (`Bash: swift build`, `Waiting to run …`, or its last words).
@@ -178,7 +186,7 @@ It shows whether transcripts are found, which hooks are installed and whether th
 |---|---|
 | Nothing at the top of the screen | `status` should say "running". If not, run `~/.claude-notch/bin/ClaudeNotch` in a terminal and read any error. |
 | "Transcripts NOT FOUND" | Use Claude Code or the desktop app once. If your config is elsewhere, set `CLAUDE_CONFIG_DIR` and reinstall. |
-| The list is empty or missing a session | Only sessions active in the last 12 hours are shown. |
+| The list is empty or missing a session | Only the 6 most urgent sessions active in the last 12 hours are shown (see *The list*). |
 | "Needs you" is late or wrong | Run `status`. If hooks aren't installed, `./scripts/install.sh`. Then restart the Claude session. |
 | No Allow/Deny buttons | Hooks must be installed *and* the session started after that. The app must be running. Check that `~/.claude/settings.json` has a `PermissionRequest` entry. |
 | Clicking a card does nothing | Needs the Claude desktop app and its entry-points setting. For terminal sessions the command is on your clipboard. |
