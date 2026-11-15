@@ -9,8 +9,13 @@ public enum NotchMode: Equatable {
     case expanded
     /// Permission prompts waiting for Allow/Deny.
     case request
-    /// The settings page, opened from the gear in the list.
+    /// The settings page, a tab next to the list.
     case settings
+    /// Every server the sessions have running, a tab next to the list.
+    case servers
+
+    /// The three pages that share the tab bar along the bottom.
+    public var isTabbedPage: Bool { self == .expanded || self == .settings || self == .servers }
 }
 
 /// Sizes and hit-testing for the notch panel, free of any UI framework so they can be tested.
@@ -64,7 +69,7 @@ public struct NotchGeometry {
             return CGSize(width: collapsedWidth, height: notchHeight)
         case .peek:
             return CGSize(width: max(collapsedWidth, Self.peekMinWidth), height: notchHeight + Self.peekHeight)
-        case .expanded, .settings:
+        case .expanded, .settings, .servers:
             return CGSize(width: Self.listWidth, height: tabbedHeight(sessionCount: sessionCount))
         case .request:
             let shown = min(requestCount, Self.maxRequestRows)
@@ -76,7 +81,7 @@ public struct NotchGeometry {
         }
     }
 
-    /// Sessions and Settings share one height, so switching tabs never moves the tab bar out from under the pointer
+    /// Sessions, Servers and Settings share one height, so switching tabs never moves the tab bar out from under the pointer
     /// (which would count as leaving the notch and close it).
     private func tabbedHeight(sessionCount: Int) -> CGFloat {
         let listRows = CGFloat(max(1, min(sessionCount, Self.maxSessionRows)))
@@ -95,7 +100,7 @@ public struct NotchGeometry {
 
     /// Only the list, the approval cards and the settings page have anything to click. In other modes the window lets every click through.
     public static func acceptsClicks(in mode: NotchMode) -> Bool {
-        mode == .expanded || mode == .request || mode == .settings
+        mode.isTabbedPage || mode == .request
     }
 
     // MARK: Hit testing

@@ -28,6 +28,7 @@ struct NotchRootView: View {
         case .peek: AlertBar(model: model)
         case .expanded: TabbedPage(model: model) { SessionListView(model: model) }
         case .request: RequestListView(model: model)
+        case .servers: TabbedPage(model: model) { ServersView(model: model) }
         case .settings: TabbedPage(model: model) { SettingsView(model: model) }
         }
     }
@@ -63,19 +64,28 @@ struct TabbedPage<Content: View>: View {
         VStack(spacing: 0) {
             content.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             HStack(spacing: 6) {
-                tab("Sessions", icon: "square.stack.fill", selected: model.mode == .expanded) { model.hideSettings() }
-                tab("Settings", icon: "gearshape.fill", selected: model.mode == .settings) { model.showSettings() }
+                tab("Sessions", icon: "square.stack.fill", page: .expanded)
+                tab("Servers", icon: "server.rack", page: .servers, badge: model.allServers.count)
+                tab("Settings", icon: "gearshape.fill", page: .settings)
             }
             .padding(.horizontal, NotchGeometry.listInset)
             .frame(height: NotchGeometry.tabBarHeight, alignment: .top)
         }
     }
 
-    private func tab(_ title: String, icon: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    private func tab(_ title: String, icon: String, page: NotchMode, badge: Int = 0) -> some View {
+        let selected = model.mode == page
+        return Button { model.showPage(page) } label: {
             HStack(spacing: 5) {
                 Image(systemName: icon).font(.system(size: 10, weight: .semibold))
                 Text(title).font(.system(size: 11, weight: .semibold))
+                if badge > 0 {
+                    Text(verbatim: String(badge))
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 5)
+                        .background(Capsule().fill(Palette.mint))
+                }
             }
             .foregroundStyle(selected ? Color.white : .white.opacity(0.4))
             .frame(maxWidth: .infinity)

@@ -19,8 +19,9 @@ final class NotchGeometryTests: XCTestCase {
 
     func testSessionsAndSettingsAreTheSameSizeSoTheTabBarStaysUnderThePointer() {
         for count in 0...8 {
-            XCTAssertEqual(geometry.size(for: .expanded, sessionCount: count, requestCount: 0),
-                           geometry.size(for: .settings, sessionCount: count, requestCount: 0), "\(count) sessions")
+            let list = geometry.size(for: .expanded, sessionCount: count, requestCount: 0)
+            XCTAssertEqual(list, geometry.size(for: .settings, sessionCount: count, requestCount: 0), "\(count) sessions")
+            XCTAssertEqual(list, geometry.size(for: .servers, sessionCount: count, requestCount: 0), "\(count) sessions")
         }
     }
 
@@ -31,7 +32,7 @@ final class NotchGeometryTests: XCTestCase {
     }
 
     func testEveryModeFitsInsideThePanel() {
-        for mode in [NotchMode.collapsed, .peek, .expanded, .request, .settings] {
+        for mode in [NotchMode.collapsed, .peek, .expanded, .request, .settings, .servers] {
             let size = geometry.size(for: mode, sessionCount: 99, requestCount: 99)
             XCTAssertLessThanOrEqual(size.width, NotchGeometry.panelSize.width, "\(mode)")
             XCTAssertLessThanOrEqual(size.height, NotchGeometry.panelSize.height, "\(mode)")
@@ -119,6 +120,7 @@ final class NotchInteractionTests: XCTestCase {
 
     func testOnlyTheListApprovalsAndSettingsAcceptClicks() {
         XCTAssertTrue(NotchGeometry.acceptsClicks(in: .settings))
+        XCTAssertTrue(NotchGeometry.acceptsClicks(in: .servers))
         XCTAssertTrue(NotchGeometry.acceptsClicks(in: .expanded))
         XCTAssertTrue(NotchGeometry.acceptsClicks(in: .request))
         XCTAssertFalse(NotchGeometry.acceptsClicks(in: .collapsed))

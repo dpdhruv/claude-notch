@@ -34,7 +34,7 @@ struct SettingsView: View {
     }
 }
 
-private struct SettingRowFrame<Trailing: View>: View {
+struct SettingRowFrame<Trailing: View>: View {
     let title: String
     let detail: String
     @ViewBuilder let trailing: Trailing

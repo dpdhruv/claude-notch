@@ -33,7 +33,7 @@ Hover the notch to see every Claude Code and Claude desktop session at a glance.
 | **Alerts** (with a sound) | A session **needs you** (permission prompt, question, plan to approve) · a session **finished** · a **prompt cache is about to expire** · a cache **went cold**. |
 | **Hover** | One card per session: state, what it is doing right now, a **cache countdown ring**, and **context-window usage** (`212k / 1M · 21%`). |
 | **Click a card** | Opens that session in the Claude desktop app. For terminal sessions it copies `claude --resume <id>` instead. |
-| **Servers** | A green `● :5173` chip on a card means that session left a server running. Click it for **Stop** (asks once; offers **Force stop** if the server ignores the polite request). Only servers a session started are listed, never your own. |
+| **Servers** | A green `● :5173` chip on a card means that session left a server running. Click it, or open the **Servers** tab to see every one in one list, for **Stop** (asks once; offers **Force stop** if the server ignores the polite request). Only servers a session started are listed, never your own. |
 | **Quiet mode** | Disappears completely while a full-screen app (a film, a presentation) is in front: no sound, no drop-downs, nothing drawn. Or pause alerts for an hour by hand. |
 | **Approvals** | Permission prompts appear as cards with the command, a risk flag for things like `rm -rf`, and **Deny / Allow** buttons. Several sessions can wait at once. |
 
@@ -113,7 +113,7 @@ Allow does not override your deny rules or Claude's other safeguards. It answers
 
 **When Claude is already in front.** If the Claude desktop app (or a terminal) is the app you're using, approval cards don't drop down and make no sound: Claude is showing its own prompt right there. The notch shows its amber badge instead, hovering it opens the cards, and switching to another app drops them down. They are held back rather than handed back to Claude, because the session that is asking may not be the one on your screen. Turn it off with *Quiet when Claude is in front* in the notch settings.
 
-Use the **Settings** tab along the bottom of the notch (and **Sessions** to go back):
+Use the tabs along the bottom of the notch: **Sessions**, **Servers** and **Settings**:
 
 - **Quiet in full screen** (on by default). While a full-screen app is in front, the notch draws nothing, plays no sounds and lets every click through. When you leave full screen it returns, and any approval still waiting is shown.
 - **Sounds** can be switched off entirely.
@@ -122,6 +122,8 @@ Use the **Settings** tab along the bottom of the notch (and **Sessions** to go b
 Approvals that arrive while quiet are not lost: they wait, and if you are still away after about 110 seconds they go back to Claude's own dialog.
 
 Full screen is detected from the system's own "an app is full screen" flag. A few players draw their own full-screen mode without setting it; if the notch still shows over one, use **Pause alerts**.
+
+<p align="center"><img src="docs/images/servers.png" width="560" alt="The Servers tab lists every server your sessions left running, with Stop buttons"></p>
 
 <p align="center"><img src="docs/images/settings.png" width="560" alt="The settings page inside the notch"></p>
 

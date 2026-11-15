@@ -100,15 +100,13 @@ final class NotchModel: ObservableObject {
 
     // MARK: Settings page
 
-    func showSettings() {
-        guard mode == .expanded else { return }
-        withAnimation(Motion.reveal) { mode = .settings }
+    /// Switches between the tabbed pages (sessions, servers, settings).
+    func showPage(_ page: NotchMode) {
+        guard mode.isTabbedPage, page.isTabbedPage, mode != page else { return }
+        withAnimation(Motion.reveal) { mode = page }
     }
 
-    func hideSettings() {
-        guard mode == .settings else { return }
-        withAnimation(Motion.reveal) { mode = .expanded }
-    }
+    func showSettings() { showPage(.settings) }
     private static let quietWhenClaudeInFrontKey = "quietWhenClaudeInFront"
 
     /// Claude (or a terminal) is in front, so approvals wait quietly instead of dropping down.
@@ -196,7 +194,7 @@ final class NotchModel: ObservableObject {
         pendingCollapse?.cancel()
         alertTimer?.invalidate()
         // With approvals waiting, hovering shows them (they may have been held back quietly) instead of the list.
-        let target: NotchMode = requests.isEmpty ? (mode == .settings ? .settings : .expanded) : .request
+        let target: NotchMode = requests.isEmpty ? (mode.isTabbedPage ? mode : .expanded) : .request
         if mode != target { withAnimation(Motion.reveal) { mode = target } }
     }
 
@@ -249,6 +247,14 @@ final class NotchModel: ObservableObject {
     }
 
     // MARK: Servers
+
+    /// Every running server, grouped by session in the list's order.
+    var allServers: [RunningServer] {
+        let order = Dictionary(uniqueKeysWithValues: monitor.sessions.enumerated().map { ($1.id, $0) })
+        return servers.values.flatMap { $0 }.sorted {
+            (order[$0.sessionID] ?? .max, $0.port) < (order[$1.sessionID] ?? .max, $1.port)
+        }
+    }
 
     func toggleServerMenu(forSession id: String) {
         serverMenuSessionID = serverMenuSessionID == id ? nil : id
