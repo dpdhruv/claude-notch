@@ -8,7 +8,8 @@ final class NotchModel: ObservableObject {
     let monitor: SessionMonitor
     let broker: PermissionBroker
     private let serverMonitor: ServerMonitor
-    let geometry: NotchGeometry
+    /// Sizes for the current display; replaced when the notch moves to another screen.
+    @Published private(set) var geometry: NotchGeometry
 
     @Published private(set) var mode: NotchMode = .collapsed
     @Published private(set) var alert: NotchAlert?
@@ -289,6 +290,12 @@ final class NotchModel: ObservableObject {
     func openSession(atRow row: Int) {
         guard sessions.indices.contains(row), sessions[row].id != serverMenuSessionID else { return }
         open(sessionID: sessions[row].id, title: sessions[row].title)
+    }
+
+    /// The notch moved to a display with a different notch size (lid opened or closed, monitor plugged in).
+    func updateGeometry(_ geometry: NotchGeometry) {
+        guard geometry != self.geometry else { return }
+        self.geometry = geometry
     }
 
     // MARK: Servers

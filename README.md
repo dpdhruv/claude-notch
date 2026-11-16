@@ -165,7 +165,7 @@ Full screen is detected from the system's own "an app is full screen" flag. A fe
 - Stopping a server also stops the shell and `npm` wrapper Claude started around it, never the session itself. Servers started by the Claude app's preview feature are marked "app-managed" and the app may start them again.
 - The risk flag is a simple pattern match on shell commands. It is a nudge, not a security boundary.
 - Full-screen detection depends on the system flag described under Quiet mode; use Pause alerts for players that don't set it.
-- Only the display with the notch is used. On a Mac without one the pill sits at the top centre of the main display.
+- The notch lives on one display: the one with the physical notch (laptop lid open), otherwise the main display, where it is drawn as a notch-shaped pill at the top centre (lid closed with an external monitor). It follows when you plug in, unplug, or open or close the lid; it never appears on a second monitor at the same time.
 
 ## Configuration
 

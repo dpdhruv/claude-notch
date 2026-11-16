@@ -6,6 +6,7 @@ import NotchCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: NotchPanel?
+    private var screen: NSScreen!
     private var model: NotchModel?
     private var pointerTimer: Timer?
     private var presenceObserver: AnyCancellable?
@@ -14,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let screen = Self.notchScreen()
+        self.screen = screen
         // `.fullScreen` is set system-wide while a full-screen app (a film, a presentation) is in front.
         let model = NotchModel(geometry: Self.geometry(for: screen),
                                isFullScreenAppActive: { NSApp.currentSystemPresentationOptions.contains(.fullScreen) },
@@ -53,7 +55,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         model.start()
         if ProcessInfo.processInfo.environment["CLAUDE_NOTCH_EXPANDED"] != nil { model.forceExpanded() }
-        trackPointer(on: screen)
+        trackPointer()
+        // Docking, undocking, opening or closing the lid: follow the display the notch belongs on.
+        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.followScreenChanges()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -65,9 +71,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Every tick it works out whether the pointer is on the notch and tells the model; and it keeps the window
     /// click-through except while the pointer is on something clickable, so the large transparent panel never
     /// swallows clicks meant for the app underneath (Chrome tabs, menu bar items…).
-    private func trackPointer(on screen: NSScreen) {
+    private func trackPointer() {
         pointerTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
             guard let self, let model = self.model, let panel = self.panel else { return }
+            let screen: NSScreen = self.screen
 
             let mouse = NSEvent.mouseLocation   // screen coordinates, origin bottom-left
             let drawn = model.size
@@ -93,9 +100,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: Screen
 
-    /// The built-in display with a notch, else the main display.
+    /// Moves the notch to the right display and resizes it for that display's notch (or lack of one).
+    private func followScreenChanges() {
+        let target = Self.notchScreen()
+        let size = NotchGeometry.panelSize
+        panel?.setFrame(NSRect(x: target.frame.midX - size.width / 2, y: target.frame.maxY - size.height, width: size.width, height: size.height), display: true)
+        screen = target
+        model?.updateGeometry(Self.geometry(for: target))
+    }
+
+    /// The display with a notch if there is one, else the main display (see `ScreenPicker`).
     private static func notchScreen() -> NSScreen {
-        NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.main ?? NSScreen.screens[0]
+        let screens = NSScreen.screens
+        let infos = screens.enumerated().map { ScreenPicker.Screen(id: $0.offset, hasNotch: $0.element.safeAreaInsets.top > 0, isMain: $0.element == NSScreen.main) }
+        return ScreenPicker.pick(from: infos).map { screens[$0.id] } ?? NSScreen.main ?? screens[0]
     }
 
     /// The physical notch's size, or a notch-sized stand-in on Macs without one.

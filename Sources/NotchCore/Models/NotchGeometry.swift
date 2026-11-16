@@ -19,7 +19,7 @@ public enum NotchMode: Equatable {
 }
 
 /// Sizes and hit-testing for the notch panel, free of any UI framework so they can be tested.
-public struct NotchGeometry {
+public struct NotchGeometry: Equatable {
     public let notchWidth: CGFloat
     public let notchHeight: CGFloat
 
